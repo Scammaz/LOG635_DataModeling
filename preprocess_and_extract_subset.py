@@ -35,14 +35,21 @@ def prepare_subset(pretreated_subset_path: Path):
                         for file in second_level.glob('*'):
                             if file.is_file():
                                 # preprocess image
-                                image = cv2.imread(file)
-                                
+                                path = DATASET_A_DIR / first_level.name / second_level.name
+                                image = cv2.imread(os.path.join(path, file.name))
+
+                                print(file.name)
                                 # extract maker from that image
                                 new_image = extract_marker(image)
                                 
-                                # save extracted to processed dataset
-                                subset_dir = pretreated_subset_path / first_level.name / second_level.name / file.name
-                                save_image_to(subset_dir, new_image)
+                                if(new_image is not None):
+                                    # save extracted to processed dataset
+                                    subset_dir = os.path.join(pretreated_subset_path, first_level.name, second_level.name)
+
+                                    if not os.path.exists(subset_dir):
+                                        os.makedirs(subset_dir)
+
+                                    save_image_to(subset_dir + "/" + file.name, new_image)
 
 # Function to detect shape
 def detect_shape(contour):
@@ -83,59 +90,57 @@ def dispayImage(image):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def extract_marker(originalImage):
-    
-    for filename in os.listdir(dataset_dir):
+def extract_marker(image):
 
-        nombre_photo=nombre_photo+1
+    #dispayImage(image)
+    # Convert to grayscale
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    #dispayImage(gray)
 
-        if filename.endswith('.jpg') or filename.endswith('.jpeg') or filename.endswith('.png'):
+    # Apply bilateral filter
+    filtered_image = cv2.bilateralFilter(gray, 15, 60, 130)
+    #dispayImage(filtered_image)
 
-            # Load the image
-            image = cv2.imread(os.path.join(dataset_dir, filename))
-            #dispayImage(image)
-            # Convert to grayscale
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            #dispayImage(gray)
+    # Apply Canny edge detection
+    edges = cv2.Canny(filtered_image, 70, 240)
+    #dispayImage(edges)
 
-            # Apply bilateral filter
-            filtered_image = cv2.bilateralFilter(gray, 15, 60, 130)
-            #dispayImage(filtered_image)
+    # Find contours
+    contours, _ = cv2.findContours(edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-            # Apply Canny edge detection
-            edges = cv2.Canny(filtered_image, 70, 240)
-            #dispayImage(edges)
+    # Filter contours
+    square_contours = []
+    for contour in contours:
+        #perimeter = cv2.arcLength(contour, True)
+        #approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
+        shape = detect_shape(contour)
+        if shape== "square":
+            square_contours.append(contour)
+            
+    # Supposons que vous voulez extraire la région de l'objet ayant le plus grand contour
+    try:
+        max_contour = max(contours, key=cv2.contourArea)
+    except:
+        print("No square found")
+        return None
 
-            # Find contours
-            contours, _ = cv2.findContours(edges.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Trouver les coordonnées du rectangle englobant ce contour
+    x, y, w, h = cv2.boundingRect(max_contour)
 
-            # Filter contours
-            square_contours = []
-            for contour in contours:
-                perimeter = cv2.arcLength(contour, True)
-                approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
-                shape = detect_shape(contour)
-                if shape== "square":
-                    square_contours.append(contour)
-                    nombre_carre=nombre_carre+1
-            # Supposons que vous voulez extraire la région de l'objet ayant le plus grand contour
-            max_contour = max(contours, key=cv2.contourArea)
+    # Extraire la région de l'image originale
+    region_of_interest = image[y:y+h, x:x+w]
 
-            # Trouver les coordonnées du rectangle englobant ce contour
-            x, y, w, h = cv2.boundingRect(max_contour)
+    # Redimensionner l'image extraite à 40x40 pixels
+    resized_image = cv2.resize(region_of_interest, (40, 40))
 
-            # Extraire la région de l'image originale
-            region_of_interest = image[y:y+h, x:x+w]
-
-            # Redimensionner l'image extraite à 40x40 pixels
-            resized_image = cv2.resize(region_of_interest, (40, 40))
-
-            # Afficher l'image résultante
-            cv2.imshow('Processed Image', resized_image)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+    # Afficher l'image résultante
+    # cv2.imshow('Processed Image', resized_image)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+    return resized_image
 
 def save_image_to(dir, image):
+    print(dir)
     cv2.imwrite(dir, image)
 
 

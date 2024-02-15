@@ -27,3 +27,6 @@ def augment_dataset(out_dir: Path):
 
                     # Run the pipeline specifyin the number of images to generate
                     p.sample(100)
+
+
+augment_dataset(Path.cwd() / "Dataset_B")
