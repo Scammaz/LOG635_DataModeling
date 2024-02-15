@@ -18,8 +18,6 @@ nombre_photo = 0
 nombre_carre = 0
 
 
-
-
 # Function to detect shape
 def detect_shape(contour):
     # initialize the shape name and approximate the contour
