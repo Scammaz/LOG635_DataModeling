@@ -129,10 +129,6 @@ def extract_marker(image):
     # Redimensionner l'image extraite à 40x40 pixels
     resized_image = cv2.resize(region_of_interest, (40, 40))
 
-    # Afficher l'image résultante
-    # cv2.imshow('Processed Image', resized_image)
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
     return resized_image
 
 def save_image_to(dir, image):

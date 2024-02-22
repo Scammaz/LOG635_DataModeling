@@ -35,7 +35,8 @@ def augment_dataset(out_dir: Path):
                 if second_level.is_dir():
                     for file in second_level.glob('*'):
                             if file.is_file():
-                                # normalise images (resize 40x40, grayscale filter, blurr filter, rename to convention (#_Shape_#shapes))
+                                # normalise images (grayscale filter, blurr filter, rename to convention (#_Shape_#shapes))
+                                pass
                                 
                     
 
