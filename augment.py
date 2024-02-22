@@ -26,7 +26,7 @@ def augment_dataset(out_dir: Path):
                     p.random_distortion(probability=1, grid_width=4, grid_height=4, magnitude=8)
 
                     # Run the pipeline specifyin the number of images to generate
-                    p.sample(100)
+                    p.sample(5)
 
 
 augment_dataset(Path.cwd() / "Dataset_B")

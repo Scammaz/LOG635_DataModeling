@@ -9,10 +9,6 @@ import pickle
 import Augmentor as aug
 import os
 
-dataset_dir = 'DataSet/Cercles/Cercle2/'
-nombre_photo = 0
-nombre_carre = 0
-
 DATASET_A_DIR = Path.cwd() / "DataSet_A"
 LABELS = ["Cercle2", "Cercle3", "Diamant2", "Diamant5", "Hexagone3", "Hexagone4", "Triangle3", "Triangle5"]
 
@@ -114,7 +110,7 @@ def extract_marker(image):
         #perimeter = cv2.arcLength(contour, True)
         #approx = cv2.approxPolyDP(contour, 0.04 * perimeter, True)
         shape = detect_shape(contour)
-        if shape== "square":
+        if shape == "square":
             square_contours.append(contour)
             
     # Supposons que vous voulez extraire la région de l'objet ayant le plus grand contour
