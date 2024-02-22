@@ -39,7 +39,6 @@ def augment_dataset(out_dir: Path):
                     i =0
                     for file in second_level.glob('*'):
                             if file.is_file():
-<<<<<<< HEAD
                                 image = cv2.imread(str(file))
                                 image = cv2.resize(image, (40, 40))
                                 image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -51,10 +50,6 @@ def augment_dataset(out_dir: Path):
                                 i += 1
                                 
                                 # normalise images (resize 40x40, grayscale filter, blurr filter, rename to convention (#_Shape_#shapes))
-=======
-                                # normalise images (grayscale filter, blurr filter, rename to convention (#_Shape_#shapes))
-                                pass
->>>>>>> 9e7e0f2c8914e1d7355e34a0dfac02c27ecc5fc3
                                 
                     
 
