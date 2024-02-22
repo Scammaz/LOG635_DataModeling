@@ -2,6 +2,7 @@ from pathlib import Path
 import Augmentor
 
 SOURCE_DIR = Path.cwd() / "Processed_Dataset_A"
+DESTINATION_DIR = Path.cwd() / "Dataset_B"
 
 def augment_dataset(out_dir: Path):
     # For each shape folder
@@ -23,10 +24,20 @@ def augment_dataset(out_dir: Path):
                     p.flip_left_right(probability=0.75)
                     p.flip_top_bottom(probability=0.75)
                     p.skew_tilt(probability=0.75, magnitude=0.35)
-                    p.random_distortion(probability=1, grid_width=4, grid_height=4, magnitude=8)
 
                     # Run the pipeline specifyin the number of images to generate
-                    p.sample(10)
+                    p.sample(400)
+    
+    for first_level in DESTINATION_DIR.glob('*'):
+        if first_level.is_dir():          
+            # For each chape subfolder
+            for second_level in first_level.glob('*'):
+                if second_level.is_dir():
+                    for file in second_level.glob('*'):
+                            if file.is_file():
+                                # normalise images (resize 40x40, grayscale filter, blurr filter, rename to convention (#_Shape_#shapes))
+                                
+                    
 
 
-augment_dataset(Path.cwd() / "Dataset_B")
+augment_dataset(DESTINATION_DIR)
