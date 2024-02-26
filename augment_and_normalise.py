@@ -33,25 +33,22 @@ def augment_dataset(out_dir: Path):
     for first_level in DESTINATION_DIR.glob('*'):
         if first_level.is_dir():          
             # For each chape subfolder
-            i = 0
             for second_level in first_level.glob('*'):
                 if second_level.is_dir():
-                    i =0
+                    i = 0
                     for file in second_level.glob('*'):
                             if file.is_file():
+                                # normalise images (resize 40x40, grayscale filter, blurr filter, rename to convention (#_Shape_#shapes))
                                 image = cv2.imread(str(file))
                                 image = cv2.resize(image, (40, 40))
                                 image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
                                 image = cv2.GaussianBlur(image, (5, 5), 0)
+                                
                                 new_filename = str(i) + "_" + second_level.name + ".png"
                                 new_filepath = second_level / new_filename
                                 cv2.imwrite(str(file), image)
                                 os.rename(str(file), str(new_filepath))
                                 i += 1
                                 
-                                # normalise images (resize 40x40, grayscale filter, blurr filter, rename to convention (#_Shape_#shapes))
                                 
-                    
-
-
 augment_dataset(DESTINATION_DIR)
