@@ -2,6 +2,7 @@ from tabulate import tabulate
 import matplotlib.pyplot as plt
 import numpy as np
 import pickle
+import math
 
 class NeuralNetwork():
     def __init__(self, nb_inputs, nb_outputs, nb_hidden_layers, nb_nodes_per_layer, learning_rate):
@@ -45,6 +46,8 @@ class NeuralNetwork():
     
     def relu(self, z):
         s = np.maximum(0,z)
+        if(math.isnan(s)):
+            print("NAN" )
         return s
     
     def derived_relu(self, z):

@@ -20,6 +20,7 @@ def print_dataset():
               
     print(tabulate(zip(features["TEST"], labels["TEST"]), headers=["Features", "Label"]))
 
+
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
@@ -54,6 +55,7 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label')
     plt.xlabel('Predicted label') 
     plt.show()
+    
     
 def NN_test():
     with open("X.pkl", "rb") as db:
@@ -101,8 +103,10 @@ def NN_test():
     cm = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1))
     plot_confusion_matrix(cm, classes= ['0', '1', '2', '3', '4', '5', '6', '7'], title='Confusion matrix, without normalization')
     
+    
 def main():
     # print_dataset()
     NN_test()
+
 
 main()

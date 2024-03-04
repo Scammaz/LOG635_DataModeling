@@ -65,12 +65,12 @@ class NeuralNetwork2():
         # input to hidden
         self.A[0] = X
         self.Z[0] = np.dot(self.A[0], self.W[0]) + self.B[0]
-        self.A[0] = self.relu(self.Z[0])
+        self.A[0] = self.sigmoid(self.Z[0])
         
         #traverse hidden
         for i in range(1, self.nb_hidden_layers):
             self.Z[i] = np.dot(self.A[i-1], self.W[i]) + self.B[i]
-            self.A[i] = self.relu(self.Z[i])
+            self.A[i] = self.sigmoid(self.Z[i])
         
         self.Z[self.nb_hidden_layers] = np.dot(self.A[self.nb_hidden_layers-1], self.W[self.nb_hidden_layers]) + self.B[self.nb_hidden_layers]
         self.A[self.nb_hidden_layers] = self.softmax(self.Z[self.nb_hidden_layers])
@@ -85,7 +85,7 @@ class NeuralNetwork2():
         dW = [None] * (self.nb_hidden_layers + 1)
         db = [None] * (self.nb_hidden_layers + 1)
         
-        #Output layers
+        #Output to hidden layer
         # Error in output
         dZ[-1] = self.A[-1] - y
         # Delta for the weights w2
@@ -99,7 +99,7 @@ class NeuralNetwork2():
         #Hidden layers
         for i in range(self.nb_hidden_layers- 1, 0, -1):
             dA[i] = np.dot(dZ[i+1], self.W[i+1].T)
-            dZ[i] = dA[i] * self.derived_relu(self.Z[i])
+            dZ[i] = dA[i] * self.derived_sigmoid(self.Z[i])
             # Delta for the weights wn
             dW[i] = (1./m) * np.dot(self.A[i-1].T, dZ[i])
             # Delta for the bias b2
@@ -108,9 +108,9 @@ class NeuralNetwork2():
             self.W[i] -= self.learning_rate * dW[i]
             self.B[i] -= self.learning_rate * db[i]
 
-        #Input layers
+        #Hidden to Input layer
         dA[0] = np.dot(dZ[1], self.W[1].T)
-        dZ[0] = dA[0] * self.derived_relu(self.Z[0])
+        dZ[0] = dA[0] * self.derived_sigmoid(self.Z[0])
         # Delta for the weights w1
         dW[0] = (1./m) * np.dot(X.T, dZ[0])
         # Delta for the bias b1
