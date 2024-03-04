@@ -56,6 +56,15 @@ class NeuralNetwork2():
         s = (np.exp(z.T) / np.sum(np.exp(z), axis=1)).T
         return s
     
+    def softmaxStabilized(self, z):
+        # Stabilize input for numerical stability
+        e_x = np.exp(z - np.max(z))
+        s = e_x / e_x.sum()
+        
+        # x = z - np.max(z, axis=-1, keepdims=True)
+        # s = (np.exp(x.T) / np.sum(np.exp(x)))
+        return s
+    
     def entropy_loss(self, y, y_pred):
         eps = np.finfo(float).eps
         return -np.sum(y * np.log(y_pred + eps))
@@ -63,8 +72,8 @@ class NeuralNetwork2():
     def forward(self, X):
         # Forward propagation through our network
         # input to hidden
-        self.A[0] = X
-        self.Z[0] = np.dot(self.A[0], self.W[0]) + self.B[0]
+        self.x = X
+        self.Z[0] = np.dot(self.x, self.W[0]) + self.B[0]
         self.A[0] = self.sigmoid(self.Z[0])
         
         #traverse hidden
@@ -72,8 +81,9 @@ class NeuralNetwork2():
             self.Z[i] = np.dot(self.A[i-1], self.W[i]) + self.B[i]
             self.A[i] = self.sigmoid(self.Z[i])
         
+        # Output layer
         self.Z[self.nb_hidden_layers] = np.dot(self.A[self.nb_hidden_layers-1], self.W[self.nb_hidden_layers]) + self.B[self.nb_hidden_layers]
-        self.A[self.nb_hidden_layers] = self.softmax(self.Z[self.nb_hidden_layers])
+        self.A[self.nb_hidden_layers] = self.sigmoid(self.Z[self.nb_hidden_layers])
         
         return self.A[self.nb_hidden_layers]
     
