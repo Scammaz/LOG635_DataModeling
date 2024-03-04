@@ -53,16 +53,7 @@ class NeuralNetwork2():
         return zprime
     
     def softmax(self, z):
-        s = (np.exp(z.T) / np.sum(np.exp(z), axis=1)).T
-        return s
-    
-    def softmaxStabilized(self, z):
-        # Stabilize input for numerical stability
-        e_x = np.exp(z - np.max(z))
-        s = e_x / e_x.sum()
-        
-        # x = z - np.max(z, axis=-1, keepdims=True)
-        # s = (np.exp(x.T) / np.sum(np.exp(x)))
+        s = (np.exp(z - np.max(z)) / np.exp(z - np.max(z)).sum())
         return s
     
     def entropy_loss(self, y, y_pred):
@@ -140,7 +131,7 @@ class NeuralNetwork2():
 
             if i == 0 or i == nb_iterations-1:
                 print(f"Iteration: {i+1}")
-                print(tabulate(zip(X, y, [np.round(y_pred) for y_pred in self.A[self.nb_hidden_layers]] ), headers=["Input", "Actual", "Predicted"]))
+                print(tabulate(zip(X, y, [np.round(y_pred) for y_pred in self.A[self.nb_hidden_layers]]), headers=["Input", "Actual", "Predicted"]))
                 print(f"Loss: {loss}")                
                 print("\n")
 

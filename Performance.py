@@ -13,7 +13,7 @@ import pickle
 import itertools
 import pandas as pd  # Import pandas library
 
-def KNN():
+def KNN(test_size, k):
 
     iris = load_iris()
 
@@ -23,21 +23,23 @@ def KNN():
     Y = iris.target
 
     #Change the label to one hot vector
-    Y = label_binarize(Y, classes=[0,1,2])
+    Y = label_binarize(Y, classes=[0,1,2,3,4,5,6,7])
     print(Y.shape)
 
     # Diviser les données en données d'entrainement et données de test 
     # Dans ce cas, j'ai utilisé 20% du données pour le test et 80% pour le données d'entrainement
     # le parametre responsable à régler la scalabilité de données est le 'test_size'
-    x_train,x_test,y_train,y_test = train_test_split(X, Y, test_size=0.2,random_state=4)
+    x_train,x_test,y_train,y_test = train_test_split(X, Y, test_size = test_size, random_state = 4)
 
+    print(x_train.shape, y_train.shape)
+    print(x_test.shape, y_test.shape)
+    
     # we create an instance of Neighbours Classifier and train with the training dataset.
-    n_neighbors = 1
     weights = 'uniform'
     metric = 'euclidean'
     algorithm = 'brute'
 
-    knn = KNeighborsClassifier(n_neighbors, weights=weights, algorithm=algorithm, metric=metric )
+    knn = KNeighborsClassifier(k, weights=weights, algorithm=algorithm, metric=metric)
     knn = knn.fit(x_train, y_train)
 
     # Show all parameters of the model Normal model
@@ -45,6 +47,18 @@ def KNN():
     # See the documentation
     # model
 
-    # Predict the response for test dataset
-    y_pred = knn.predict(x_test)
-    
+    # Use the model to predict the class of samples
+    # Notice that we are testing the train dataset
+    y_train_pred = knn.predict(x_train)
+        
+    # You can also predict the probability of each class
+    # train dataset
+    y_train_pred_prob = knn.predict_proba(x_train)
+
+    acc_iris_data = accuracy_score(y_train, y_train_pred)
+    print("Correct classification rate for the training dataset = "+str(acc_iris_data*100)+"%")
+
+    target_names = ['0', '1', '2', '3', '4', '5', '6', '7'] # name of classes
+
+    print(classification_report(y_train, y_train_pred, target_names=target_names))
+    # This works, but we have labels with no predicted samples

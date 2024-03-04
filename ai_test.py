@@ -83,14 +83,11 @@ def NN_test(nombre_de_couches_cachees=5, nombre_de_neurones_par_couche=1024, tau
         nb_inputs=1600,
         nb_outputs=8,
         nb_hidden_layers=2, #2
-        nb_nodes_per_layer=2048, #2048
+        nb_nodes_per_layer=256, #2048
         learning_rate=0.01
     )
     
-    print(f"X_train =\n{X_train}")
-    print(f"y_train =\n{y_train}")
-    
-    epochs = 500
+    epochs = 10000
     NN.train(X_train,y_train, epochs)
     
     # Fonction de perte
@@ -102,13 +99,19 @@ def NN_test(nombre_de_couches_cachees=5, nombre_de_neurones_par_couche=1024, tau
     
     # Tester le modele
     y_pred = NN.predict(X_test)
-    print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred]), headers=["Input", "Actual", "Predicted"]))
+    print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred], y_pred), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
 
     
     cm = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1))
     plot_confusion_matrix(cm, classes= ['0', '1', '2', '3', '4', '5', '6', '7'], title='Confusion matrix, without normalization')
     
-    precision = precision_recall_fscore_support(y_test, y_pred, average='weighted')
+    precision, recall, fscore, support = precision_recall_fscore_support(y_test, y_pred, average='weighted')
+    
+    print(precision)
+    print(recall)
+    print(fscore)
+    print(support)
+    
     return precision
 
     
