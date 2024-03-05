@@ -34,7 +34,22 @@ def add_num_of_shapes_as_feature(feature, label):
     # add num of shapes as additional feature
     num_of_shapes = int(label[len(label)-1])
     return np.append(feature, num_of_shapes)
-    
+
+def add_type_of_shape_as_feature(feature, label):
+    # add type of shape as additional feature
+    label = label[:len(label)-1]
+    if label.contains("Cercle"):
+        type_of_shape = 0
+    elif label.contains("Diamant"):
+        type_of_shape = 1
+    elif label.contains("Hexagone"):
+        type_of_shape = 2
+    elif label.contains("Triangle"):
+        type_of_shape = 3
+    else:
+        type_of_shape = -1
+    return np.append(feature, type_of_shape)
+
 
 def create_data_set(dir: Path):
     data_set = []
@@ -64,6 +79,7 @@ def create_data_set(dir: Path):
     for image, class_num, label in data_set:
         feature = normalize_to_feature(image)
         # feature = add_num_of_shapes_as_feature(feature, label)
+        feature = add_type_of_shape_as_feature(feature, label)
         
         X.append(feature)
         Y.append(label)
