@@ -23,15 +23,88 @@ def print_dataset():
     with open("X.pkl", "rb") as db:
         features = pickle.load(db)
     with open("Y.pkl", "rb") as db:
+<<<<<<< Updated upstream
         labels = pickle.load(db) 
               
     #print(tabulate(zip(features["TEST"], labels["TEST"]), headers=["Features", "Label"]))
+=======
+        outputs = pickle.load(db)
+        
+    X_train, X_test = features['TRAIN'], features['TEST']
+    outputs_train, outputs_test, classes = outputs['TRAIN'], outputs['TEST'], outputs['CLASSES']
+
+    labels_train = [string_label for label in outputs_train for string_label in label.keys()]
+    y_train = np.array([binary_label for label in outputs_train for binary_label in label.values()])
+
+    labels_test = [string_label for label in outputs_test for string_label in label.keys()]
+    y_test = np.array([binary_label for label in outputs_test for binary_label in label.values()])
+    
+    NN = NeuralNetwork2(
+        nb_inputs=1600,
+        nb_outputs=8,
+        nb_hidden_layers=nombre_de_couches_cachees, #2
+        nb_nodes_per_layer=nombre_de_neurones_par_couche, #1024
+        learning_rate=taux_dapprentissage #0.01
+    )
+    plt.clf()  # Clear the current figure
+
+    epochs = nombre_diterations #300
+    NN.train(X_train, y_train, epochs)
+    
+    # Fonction de perte
+    plt.plot(NN.loss)
+    plt.xlabel("Iteration")
+    plt.ylabel("Loss")
+    plt.title("Loss curve for training")
+    savename = f"{nombre_de_neurones_par_couche}_{nombre_de_couches_cachees}_{nombre_diterations}_t{taux_dapprentissage}"
+    plt.savefig(f"./LearningData/loss_curve{savename}.png")
+    #plt.show()
+    
+    # Tester le modele
+    y_pred = NN.predict(X_test)
+    #print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred], y_pred), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
+
+    cm = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1))
+    plot_confusion_matrix(cm, classes= ['0', '1', '2', '3', '4', '5', '6', '7'], title='Confusion matrix, without normalization', savename=savename)
+    
+    precision = precision_recall_fscore_support(y_test, y_pred, average='weighted')
+    plt.clf()  # Clear the current figure
+
+  
+    
+    return precision
+
+def test():
+    list_couche_cachee = [2]
+    list_neurones_par_couche = [2048]
+    list_taux_dapprentissage = [0.1, 0.25, 0.5]
+    list_iterations = [500, 1000,2500]
+    percentageDone = len(list_couche_cachee) * len(list_neurones_par_couche) * len(list_taux_dapprentissage) * len(list_iterations)
+    x = 0
+    headerBool = True
+    for couche_cachee in list_couche_cachee:
+        for neurones_par_couche in list_neurones_par_couche:
+            for taux_dapprentissage in list_taux_dapprentissage:
+                for iterations in list_iterations:
+                    print(f"couche_cachee = {couche_cachee}, neurones_par_couche = {neurones_par_couche}, taux_dapprentissage = {taux_dapprentissage}, iterations = {iterations}")
+                    accuracy_score = NN_test(couche_cachee, neurones_par_couche, taux_dapprentissage, iterations)                   
+                    precision = accuracy_score[0]
+                    rappel = accuracy_score[1]  
+                    f1 = accuracy_score[2]
+
+                    result = [[couche_cachee, neurones_par_couche, taux_dapprentissage, iterations, precision, rappel, f1]]
+                    df = pd.DataFrame(result, columns=['Couche Cachee', 'Neuronne pc', 'Taux Aprentissage', 'Iterations', 'Precision', 'Rappel', 'F1'])
+                    df.to_csv('resultsAiModel.csv', mode='a', header=headerBool, index=False)
+                    headerBool = False
+                    x += 1
+                    print(f"Percentage done: {x/percentageDone*100} %")
+>>>>>>> Stashed changes
 
 
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
-                          cmap=plt.cm.Blues):
+                          cmap=plt.cm.Blues, savename=""):
     """
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
@@ -61,6 +134,7 @@ def plot_confusion_matrix(cm, classes,
     #plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label') 
+<<<<<<< Updated upstream
     plt.show()
     
     
@@ -72,6 +146,11 @@ def NN_test(nombre_de_couches_cachees=2, nombre_de_neurones_par_couche=1024, tau
         
     X_train, X_test = features['TRAIN'], features['TEST']
     outputs_train, outputs_test, classes = outputs['TRAIN'], outputs['TEST'], outputs['CLASSES']
+=======
+    plt.savefig(f"./LearningData/confusion_matrix{savename}.png")
+    #plt.show()
+    
+>>>>>>> Stashed changes
 
     labels_train = [string_label for label in outputs_train for string_label in label.keys()]
     y_train = np.array([binary_label for label in outputs_train for binary_label in label.values()])
@@ -146,7 +225,11 @@ test()
     
 def main():
     # print_dataset()
+<<<<<<< Updated upstream
     #NN_test()
+=======
+    # NN_test()
+>>>>>>> Stashed changes
     test()
 
 main()
