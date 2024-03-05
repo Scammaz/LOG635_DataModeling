@@ -53,8 +53,8 @@ class NeuralNetwork2():
         return zprime
     
     def softmax(self, z):
-        s = (np.exp(z - np.max(z)) / np.exp(z - np.max(z)).sum())
-        return s
+        e_z = np.exp(z - np.max(z))
+        return e_z / np.sum(e_z, axis=0)
     
     def entropy_loss(self, y, y_pred):
         eps = np.finfo(float).eps
@@ -74,7 +74,9 @@ class NeuralNetwork2():
         
         # Output layer
         self.Z[self.nb_hidden_layers] = np.dot(self.A[self.nb_hidden_layers-1], self.W[self.nb_hidden_layers]) + self.B[self.nb_hidden_layers]
-        self.A[self.nb_hidden_layers] = self.sigmoid(self.Z[self.nb_hidden_layers])
+        self.A[self.nb_hidden_layers] = self.softmax(self.Z[self.nb_hidden_layers])
+        
+        sum = np.sum(self.A[self.nb_hidden_layers], axis=0)
         
         return self.A[self.nb_hidden_layers]
     

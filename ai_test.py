@@ -1,6 +1,5 @@
 from tabulate import tabulate
 from sklearn.preprocessing import LabelBinarizer
-from neural_network import NeuralNetwork
 from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
@@ -15,6 +14,7 @@ import pandas as pd  # Import pandas library
 import Performance as p
 from sklearn.metrics import precision_recall_fscore_support
 
+from neural_network import NeuralNetwork
 from test_RN import NeuralNetwork2
 
 label_encoder = LabelBinarizer()
@@ -79,7 +79,7 @@ def NN_test(nombre_de_couches_cachees=5, nombre_de_neurones_par_couche=1024, tau
     labels_test = [string_label for label in outputs_test for string_label in label.keys()]
     y_test = np.array([binary_label for label in outputs_test for binary_label in label.values()])
     
-    NN = NeuralNetwork2(
+    NN = NeuralNetwork(
         nb_inputs=1600,
         nb_outputs=8,
         nb_hidden_layers=2, #2
@@ -87,7 +87,7 @@ def NN_test(nombre_de_couches_cachees=5, nombre_de_neurones_par_couche=1024, tau
         learning_rate=0.01
     )
     
-    epochs = 10000
+    epochs = 10
     NN.train(X_train,y_train, epochs)
     
     # Fonction de perte
@@ -103,7 +103,7 @@ def NN_test(nombre_de_couches_cachees=5, nombre_de_neurones_par_couche=1024, tau
 
     
     cm = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1))
-    plot_confusion_matrix(cm, classes= ['0', '1', '2', '3', '4', '5', '6', '7'], title='Confusion matrix, without normalization')
+    plot_confusion_matrix(cm, classes= ["Cercle2", "Cercle3", "Diamant2", "Diamant5", "Hexagone3", "Hexagone4", "Triangle3", "Triangle5"], title='Confusion matrix, without normalization')
     
     precision, recall, fscore, support = precision_recall_fscore_support(y_test, y_pred, average='weighted')
     
@@ -114,12 +114,6 @@ def NN_test(nombre_de_couches_cachees=5, nombre_de_neurones_par_couche=1024, tau
     
     return precision
 
-    
-def main():
-    # print_dataset()
-    NN_test()
-
-main()
 
 def test():
     list_couche_cachee = [1, 2, 3, 4, 5]
@@ -147,5 +141,11 @@ def test():
                     print(f"Percentage done: {x/percentageDone*100} %")
 
 
-test()   
+# test()   
     
+    
+def main():
+    # print_dataset()
+    NN_test()
+
+main()
