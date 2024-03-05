@@ -131,7 +131,7 @@ class NeuralNetwork2():
 
             if i == 0 or i == nb_iterations-1:
                 print(f"Iteration: {i+1}")
-                print(tabulate(zip(X, y, [np.round(y_pred) for y_pred in self.A[self.nb_hidden_layers]]), headers=["Input", "Actual", "Predicted"]))
+                #print(tabulate(zip(X, y, [np.round(y_pred) for y_pred in self.A[self.nb_hidden_layers]]), headers=["Input", "Actual", "Predicted"]))
                 print(f"Loss: {loss}")                
                 print("\n")
 
