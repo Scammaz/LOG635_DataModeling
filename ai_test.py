@@ -1,6 +1,6 @@
 from tabulate import tabulate
 from sklearn.preprocessing import LabelBinarizer
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report, roc_curve
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import label_binarize
@@ -11,27 +11,112 @@ import matplotlib.pyplot as plt
 import pickle
 import itertools
 import pandas as pd  # Import pandas library
-import Performance as p
+# import Performance as p
 from sklearn.metrics import precision_recall_fscore_support
+from itertools import cycle
 
+from dataset import B_LABELS
 from neural_network import NeuralNetwork
 from test_RN import NeuralNetwork2
 
 label_encoder = LabelBinarizer()
-
-def print_dataset():
+test_res_path = lambda h, o : f'NN_test_results/{h}_{o}/'
+    
+def NN_test(nombre_de_couches_cachees=2, nombre_de_neurones_par_couche=512, taux_dapprentissage=0.2, nombre_diterations=500, hiddent_activation_func='sigmoid', output_activation_func='sigmoid'):
+    
     with open("X.pkl", "rb") as db:
         features = pickle.load(db)
     with open("Y.pkl", "rb") as db:
-        labels = pickle.load(db) 
-              
-    print(tabulate(zip(features["TEST"], labels["TEST"]), headers=["Features", "Label"]))
+        outputs = pickle.load(db)
+        
+    X_train, X_test = features['TRAIN'], features['TEST']
+    outputs_train, outputs_test, classes = outputs['TRAIN'], outputs['TEST'], outputs['CLASSES']
+
+    labels_train = [string_label for label in outputs_train for string_label in label.keys()]
+    y_train = np.array([binary_label for label in outputs_train for binary_label in label.values()])
+
+    labels_test = [string_label for label in outputs_test for string_label in label.keys()]
+    y_test = np.array([binary_label for label in outputs_test for binary_label in label.values()])
+    
+    NN = NeuralNetwork(
+        nb_inputs=1600,
+        nb_outputs=8,
+        nb_hidden_layers=nombre_de_couches_cachees, #2
+        nb_nodes_per_layer=nombre_de_neurones_par_couche, #1024
+        learning_rate=taux_dapprentissage, #0.01
+        hidden_activation=hiddent_activation_func,
+        out_activation=output_activation_func
+    )
+    
+    epochs = nombre_diterations #300
+    NN.train(X_train, y_train, epochs)
+    
+    name = f'{hiddent_activation_func}_{output_activation_func}_{nombre_de_couches_cachees}_{nombre_de_neurones_par_couche}_{taux_dapprentissage}_{nombre_diterations}'
+    
+    # Fonction de perte
+    plt.plot(NN.loss)
+    plt.xlabel("Iteration")
+    plt.ylabel("Loss")
+    plt.title("Loss curve for training")
+    plt.savefig(test_res_path(hiddent_activation_func, output_activation_func) + 'loss_' + name + '.png')
+    # plt.show()
+    plt.clf()
+    
+    # NN 
+    # Tester le modele
+    y_pred = NN.predict(X_test)
+    print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred], y_pred), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
+
+    cm = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1))
+    plot_confusion_matrix(cm, classes= B_LABELS, normalize=True, title='Confusion matrix NN, with normalization', save=True, path=(test_res_path(hiddent_activation_func, output_activation_func) + 'conf-mat_' + name + '.png'))
+    
+    metrics = precision_recall_fscore_support(y_test, y_pred, average='weighted')
+    
+    return metrics
+
+def main():
+    
+    hidden_fn = ["sigmoid", "ReLU"]
+    out_fn = ["sigmoid", 'softmax']
+    
+    for i in range(2):
+        test(hidden_fn[i], out_fn[i])
+
+
+def test(hidden_fn, out_fn):
+    path = f'{test_res_path(hidden_fn, out_fn)}resultsAiTraining.csv'
+    
+    list_couche_cachee = [1, 2, 3, 4, 5]
+    list_neurones_par_couche = [512, 1024, 2048]
+    list_taux_dapprentissage = [0.01, 0.02, 0.1]
+    list_iterations = [500, 1000, 2000]
+    percentageDone = len(list_couche_cachee) * len(list_neurones_par_couche) * len(list_taux_dapprentissage) * len(list_iterations)
+    x = 0
+    headerBool = True
+    for couche_cachee in list_couche_cachee:
+        for neurones_par_couche in list_neurones_par_couche:
+            for taux_dapprentissage in list_taux_dapprentissage:
+                for iterations in list_iterations:
+                    print(f"couche_cachee = {couche_cachee}, neurones_par_couche = {neurones_par_couche}, taux_dapprentissage = {taux_dapprentissage}, iterations = {iterations}")
+                    accuracy_score = NN_test(couche_cachee, neurones_par_couche, taux_dapprentissage, iterations, hidden_fn, out_fn)                   
+                    precision = accuracy_score[0]
+                    rappel = accuracy_score[1]  
+                    f1 = accuracy_score[2]
+
+                    result = [[couche_cachee, neurones_par_couche, taux_dapprentissage, iterations, precision, rappel, f1]]
+                    df = pd.DataFrame(result, columns=['Couche Cachee', 'Neuronne pc', 'Taux Aprentissage', 'Iterations', 'Precision', 'Rappel', 'F1'])
+                    df.to_csv(path, mode='a', header=headerBool, index=False)
+                    headerBool = False
+                    x += 1
+                    print(f"Percentage done: {x/percentageDone*100} %")
 
 
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
                           title='Confusion matrix',
-                          cmap=plt.cm.Blues):
+                          cmap=plt.cm.Blues,
+                          save=False,
+                          path=''):
     """
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
@@ -61,91 +146,89 @@ def plot_confusion_matrix(cm, classes,
     #plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label') 
-    plt.show()
     
-    
-def NN_test(nombre_de_couches_cachees=5, nombre_de_neurones_par_couche=1024, taux_dapprentissage=0.01, nombre_diterations=500):
-    with open("X.pkl", "rb") as db:
-        features = pickle.load(db)
-    with open("Y.pkl", "rb") as db:
-        outputs = pickle.load(db)
+    if save:
+        plt.savefig(path)
+        plt.clf()
+    else:
+        plt.show()
         
-    X_train, X_test = features['TRAIN'], features['TEST']
-    outputs_train, outputs_test, classes = outputs['TRAIN'], outputs['TEST'], outputs['CLASSES']
 
-    labels_train = [string_label for label in outputs_train for string_label in label.keys()]
-    y_train = np.array([binary_label for label in outputs_train for binary_label in label.values()])
+def ROC(y_test, y_pred):
+    
+    n_classes = 8
 
-    labels_test = [string_label for label in outputs_test for string_label in label.keys()]
-    y_test = np.array([binary_label for label in outputs_test for binary_label in label.values()])
-    
-    NN = NeuralNetwork(
-        nb_inputs=1600,
-        nb_outputs=8,
-        nb_hidden_layers=2, #2
-        nb_nodes_per_layer=256, #1024
-        learning_rate=0.01
-    )
-    
-    epochs = 10
-    NN.train(X_train,y_train, epochs)
-    
-    # Fonction de perte
-    plt.plot(NN.loss)
-    plt.xlabel("Iteration")
-    plt.ylabel("Loss")
-    plt.title("Loss curve for training")
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    lw=2
+    for i in range(n_classes):
+        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_pred[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+    colors = cycle(['blue', 'red', 'green'])
+    for i, color in zip(range(n_classes), colors):
+        plt.plot(fpr[i], tpr[i], color=color, lw=2,
+                label='ROC curve of class {0} (area = {1:0.2f})'
+                ''.format(i, roc_auc[i]))
+    plt.plot([0, 1], [0, 1], 'k--', lw=lw)
+    plt.xlim([-0.05, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver operating characteristic for multi-class data')
+    plt.legend(loc="lower right")
     plt.show()
     
-    # Tester le modele
-    y_pred = NN.predict(X_test)
-    print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred], y_pred), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
+def test_KNN():
+    # # IRIS
 
-    
-    cm = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1))
-    plot_confusion_matrix(cm, classes= ["Cercle2", "Cercle3", "Diamant2", "Diamant5", "Hexagone3", "Hexagone4", "Triangle3", "Triangle5"], title='Confusion matrix, without normalization')
-    
-    precision, recall, fscore, support = precision_recall_fscore_support(y_test, y_pred, average='weighted')
-    
-    print(precision)
-    print(recall)
-    print(fscore)
-    print(support)
-    
-    return precision
+    # iris = load_iris()
 
+    # # Visualiser les caractéristiques = features= primitives de la base iris
+    # # plt.scatter(iris.data[:,1],iris.data[:,2],c=iris.target, cmap=plt.cm.Paired)
+    # # plt.xlabel(iris.feature_names[1])
+    # # plt.ylabel(iris.feature_names[2])
+    # # plt.show()
 
-def test():
-    list_couche_cachee = [1, 2, 3, 4, 5]
-    list_neurones_par_couche = [512, 1024, 2048]
-    list_taux_dapprentissage = [0.01, 0.02, 0.05, 0.1, 0.5]
-    list_iterations = [100, 200, 300, 400, 500]
-    percentageDone = len(list_couche_cachee) * len(list_neurones_par_couche) * len(list_taux_dapprentissage) * len(list_iterations)
-    x = 0
-    headerBool = True
-    for couche_cachee in list_couche_cachee:
-        for neurones_par_couche in list_neurones_par_couche:
-            for taux_dapprentissage in list_taux_dapprentissage:
-                for iterations in list_iterations:
-                    print(f"couche_cachee = {couche_cachee}, neurones_par_couche = {neurones_par_couche}, taux_dapprentissage = {taux_dapprentissage}, iterations = {iterations}")
-                    accuracy_score = NN_test(couche_cachee, neurones_par_couche, taux_dapprentissage, iterations)                   
-                    precision = accuracy_score[0]
-                    rappel = accuracy_score[1]  
-                    f1 = accuracy_score[2]
+    # # plt.scatter(iris.data[:,0],iris.data[:,3],c=iris.target, cmap=plt.cm.Paired)
+    # # plt.xlabel(iris.feature_names[0])
+    # # plt.ylabel(iris.feature_names[3])
+    # # plt.show()
 
-                    result = [[couche_cachee, neurones_par_couche, taux_dapprentissage, iterations, precision, rappel, f1]]
-                    df = pd.DataFrame(result, columns=['Couche Cachee', 'Neuronne pc', 'Taux Aprentissage', 'Iterations', 'Precision', 'Rappel', 'F1'])
-                    df.to_csv('resultsAiModel.csv', mode='a', header=headerBool, index=False)
-                    headerBool = False
-                    x += 1
-                    print(f"Percentage done: {x/percentageDone*100} %")
+    # # le vecteur X contient tous les primitive (en total il y a 4 primitives) des exemples de données iris
+    # # sepal length(cm) | sepal width(cm) | petal length(cm) | petal width
+    # X = iris.data
+    # Y = iris.target
 
+    # #Change the label to one hot vector
+    # Y = label_binarize(Y, classes=[0,1,2,3,4,5,6,7])
+    # print(Y.shape)
 
-# test()   
+    # # Diviser les données en données d'entrainement et données de test 
+    # # Dans ce cas, j'ai utilisé 20% du données pour le test et 80% pour le données d'entrainement
+    # # le parametre responsable à régler la scalabilité de données est le 'test_size'
+    # x_train,x_test,y_train,y_test = train_test_split(X, Y, test_size = 0.2, random_state = 4)
+
+    # print(x_train.shape, y_train.shape)
+    # print(x_test.shape, y_test.shape)
+
+    # # KNN
+
+    # # Nous utilisons un K de 40
+    # y_pred_KNN = p.KNN(40, x_train, y_train, x_test, y_test)
+    # print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred_KNN], y_pred_KNN), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
+
+    # cm = confusion_matrix(y_test.argmax(axis=1), y_pred_KNN.argmax(axis=1))
+    # plot_confusion_matrix(cm, classes= ['0', '1', '2', '3', '4', '5', '6', '7'], normalize=True, title='Confusion matrix KNN, with normalization')
     
+    # precision, recall, fscore, support = precision_recall_fscore_support(y_test, y_pred_KNN, average='weighted')
+
+    # ROC(y_test, y_pred)
     
-def main():
-    # print_dataset()
-    NN_test()
+    # print(precision)
+    # print(recall)
+    # print(fscore)
+    # print(support)
+    pass
 
 main()

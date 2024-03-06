@@ -34,7 +34,22 @@ def add_num_of_shapes_as_feature(feature, label):
     # add num of shapes as additional feature
     num_of_shapes = int(label[len(label)-1])
     return np.append(feature, num_of_shapes)
-    
+
+def add_type_of_shape_as_feature(feature, label):
+    # add type of shape as additional feature
+    label = label[:len(label)-1]
+    if label.find("Cercle") != -1:
+        type_of_shape = 0
+    elif label.find("Diamant") != -1:
+        type_of_shape = 1
+    elif label.find("Hexagone") != -1:
+        type_of_shape = 2
+    elif label.find("Triangle") != -1:
+        type_of_shape = 3
+    else:
+        type_of_shape = -1
+    return np.append(feature, int(type_of_shape))
+
 
 def create_data_set(dir: Path):
     data_set = []
@@ -64,7 +79,8 @@ def create_data_set(dir: Path):
     for image, class_num, label in data_set:
         feature = normalize_to_feature(image)
         # feature = add_num_of_shapes_as_feature(feature, label)
-        
+        # feature = add_type_of_shape_as_feature(feature, label)
+
         X.append(feature)
         Y.append(label)
     
@@ -76,7 +92,7 @@ def create_data_set(dir: Path):
     sss.get_n_splits(X, Y)
 
     for train_index, test_index in sss.split(X, Y):
-        print("TRAIN:", train_index, "TEST:", test_index)
+        # print("TRAIN:", train_index, "TEST:", test_index)
         features_train, features_test = X[train_index], X[test_index]
         outputs_train, outputs_test = outputs[train_index], outputs[test_index]
     
@@ -84,9 +100,6 @@ def create_data_set(dir: Path):
     # Creating the files containing all the information about your model and saving them to the disk
     final_x = {'TRAIN': features_train, 'TEST': features_test}
     final_y = {'TRAIN': outputs_train, 'TEST': outputs_test, 'CLASSES': classes}
-    
-    print(f"final_x =\n{final_x}")
-    print(f"final_y =\n{final_y}")
     
     pickle_out = open("X.pkl", "wb")
     pickle.dump(final_x, pickle_out)

@@ -1,7 +1,9 @@
 from tabulate import tabulate
 from sklearn.preprocessing import LabelBinarizer
 from neural_network import NeuralNetwork
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report
+from sklearn.metrics import f1_score, precision_score, recall_score, auc, \
+                            roc_curve, confusion_matrix, classification_report, accuracy_score, \
+                            cohen_kappa_score, roc_auc_score, roc_curve
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import label_binarize
@@ -12,53 +14,102 @@ import matplotlib.pyplot as plt
 import pickle
 import itertools
 import pandas as pd  # Import pandas library
+from sklearn.svm import SVC
+from keras.models import Sequential
+from keras.layers import Dense, Conv1D, Flatten, MaxPooling1D
 
-def KNN(test_size, k):
-
-    iris = load_iris()
-
-    # le vecteur X contient tous les primitive (en total il y a 4 primitives) des exemples de données iris
-    # sepal length(cm) | sepal width(cm) | petal length(cm) | petal width
-    X = iris.data
-    Y = iris.target
-
-    #Change the label to one hot vector
-    Y = label_binarize(Y, classes=[0,1,2,3,4,5,6,7])
-    print(Y.shape)
-
-    # Diviser les données en données d'entrainement et données de test 
-    # Dans ce cas, j'ai utilisé 20% du données pour le test et 80% pour le données d'entrainement
-    # le parametre responsable à régler la scalabilité de données est le 'test_size'
-    x_train,x_test,y_train,y_test = train_test_split(X, Y, test_size = test_size, random_state = 4)
-
-    print(x_train.shape, y_train.shape)
-    print(x_test.shape, y_test.shape)
+def KNN(k, x_train, y_train, x_test, y_test):
     
+    # Begin KNN
+
+    # A- Phase d'apprentissage
+
     # we create an instance of Neighbours Classifier and train with the training dataset.
     weights = 'uniform'
     metric = 'euclidean'
     algorithm = 'brute'
 
-    knn = KNeighborsClassifier(k, weights=weights, algorithm=algorithm, metric=metric)
-    knn = knn.fit(x_train, y_train)
+    # Dans ce cas, j'ai choisi aléatoirement le parametre 'n_neighbors'. Vous pouvez faire un 
+    # boucle 'for' sur plusieurs valeurs de 'n_neighbors' et choisir celle qui donne la meilleure 
+    # valeur de précision comme suivant:
+    k_range = range(1, k)
+    scores_list = []
+    for ki in k_range:
+        knn = KNeighborsClassifier(n_neighbors=ki, weights=weights, algorithm=algorithm, metric=metric)
+        knn = knn.fit(x_train, y_train)
+        y_pred=knn.predict(x_test)
+        scores_list.append(metrics.accuracy_score(y_test,y_pred))
+        print("Accuracy is ", metrics.accuracy_score(y_test,y_pred), " for k-value:", ki)
 
-    # Show all parameters of the model Normal model
-    # You can change all these parameters
-    # See the documentation
-    # model
-
-    # Use the model to predict the class of samples
-    # Notice that we are testing the train dataset
-    y_train_pred = knn.predict(x_train)
+    # B- Phase de prédiction ou de test
         
-    # You can also predict the probability of each class
-    # train dataset
-    y_train_pred_prob = knn.predict_proba(x_train)
+    # # Prédisez les étiquettes de classe pour les données fournies, dans ce cas, j'ai donné le x_test que j'ai déjà préparé au début.
+    return knn.predict(x_train)
 
-    acc_iris_data = accuracy_score(y_train, y_train_pred)
-    print("Correct classification rate for the training dataset = "+str(acc_iris_data*100)+"%")
+def SVM(x_train, y_train, x_test):
+    
+    # A- Phase d'apprentissage
 
-    target_names = ['0', '1', '2', '3', '4', '5', '6', '7'] # name of classes
+    svm = SVC(kernel = 'linear', random_state = 0)
+    
+    #Entrainer le modèle pour les données
+    svm.fit(x_train, y_train.argmax(axis=1))
 
-    print(classification_report(y_train, y_train_pred, target_names=target_names))
-    # This works, but we have labels with no predicted samples
+    # B- Phase de prédiction ou de test
+    return svm.predict(x_test)
+
+def CNN(x_train, y_train, x_test):
+    
+    x_train = x_train.reshape(x_train.shape[0], x_train.shape[1], 1)
+    x_test = x_test.reshape(x_test.shape[0], x_test.shape[1], 1)
+
+    print(x_train.shape, x_test.shape)
+
+    # A- Créer le modèle du CNN
+
+    cnn = Sequential()
+    cnn.add(Conv1D(64, 2, activation="relu", input_shape=(x_train.shape[1],1)))
+    cnn.add(Dense(16, activation="relu"))
+    cnn.add(MaxPooling1D())
+    cnn.add(Flatten())
+    cnn.add(Dense(3, activation = 'softmax'))
+    cnn.compile(loss = 'sparse_categorical_crossentropy', 
+        optimizer = "sgd",    #adam           
+                metrics = ['accuracy'])
+    cnn.summary()
+
+    # B- Phase d'apprentissage
+    history=cnn.fit(x_train, y_train.argmax(axis=1),
+                    validation_split= 0.2, batch_size=16,epochs=100, verbose=1)
+    
+    print('--------------------------------------------------------------------\n'
+      'Evaluate the trained CNN ...')
+
+    # plotting the metrics
+
+    fig = plt.figure()
+
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validate'], loc='best')
+
+    plt.show()
+
+    # plotting the metrics
+
+    fig = plt.figure()
+
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validate'], loc='best')
+
+    plt.show()
+
+    # C- Phase de prédiction
+    return cnn.predict(x_test)

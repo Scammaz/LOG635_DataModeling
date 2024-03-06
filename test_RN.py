@@ -43,14 +43,11 @@ class NeuralNetwork2():
         return self.sigmoid(z) * (1 - self.sigmoid(z))
     
     def relu(self, z):
-        s = np.maximum(0,z)
-        return s
+        return np.maximum(0,z)
+        
     
     def derived_relu(self, z):
-        zprime = z
-        zprime[zprime<=0] = 0
-        zprime[zprime>0] = 1
-        return zprime
+        return np.where(z <= 0, 0, 1)
     
     def softmax(self, z):
         e_z = np.exp(z - np.max(z))
@@ -79,6 +76,7 @@ class NeuralNetwork2():
         sum = np.sum(self.A[self.nb_hidden_layers], axis=0)
         
         return self.A[self.nb_hidden_layers]
+        # return np.argmax(self.A[self.nb_hidden_layers], axis=1)
     
     def backward(self, X, y):
         m = X.shape[0]  # number of examples
@@ -131,13 +129,19 @@ class NeuralNetwork2():
             self.loss.append(loss)
             self.backward(X, y)
 
-            if i == 0 or i == nb_iterations-1:
+            if i % 10 == 0:     
                 print(f"Iteration: {i+1}")
-                print(tabulate(zip(X, y, [np.round(y_pred) for y_pred in self.A[self.nb_hidden_layers]]), headers=["Input", "Actual", "Predicted"]))
-                print(f"Loss: {loss}")                
-                print("\n")
+                print(f"\tLoss: {loss}")       
+                if i == 0 or i == nb_iterations-1:
+                    # print(tabulate(zip(X, y, [np.round(y_pred) for y_pred in self.A[self.nb_hidden_layers]]), headers=["Input", "Actual", "Predicted"]))
+                    print(tabulate(zip(X, y, self.prob_to_class(y_pred)), headers=["Input", "Actual", "Predicted"]))    
+                    print("\n")
+                
+    def prob_to_class(self, pred):
+        return np.eye(pred.shape[1])[np.argmax(pred, axis=1)]
 
     def predict(self, X):
-        var = np.round(self.forward(X))
+        # var = np.round(self.forward(X))
+        var = self.prob_to_class(self.forward(X))
         print("pred = " ,var)
         return var
