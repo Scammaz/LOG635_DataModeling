@@ -59,25 +59,23 @@ class NeuralNetwork():
         self.out_diff = diff_act_fn.get(output, lambda: 'Invalid Function')
                                         
 
-    # def _pos_sigmoid(self, z):
-    #     return 1 / (1 + np.exp(-z))
-    
-    # def  _neg_sigmoid(self, z):
-    #     exp = np.exp(z)
-    #     return exp / (exp + 1)
-         
-    # def sigmoid(self, z):
-    #     positive = z >= 0
-    #     negative = ~positive
-
-    #     result = np.empty_like(z, dtype=np.float)
-    #     result[positive] = self._pos_sigmoid(z[positive])
-    #     result[negative] = self._neg_sigmoid(z[negative])
-
-    #     return result
-        
-    def sigmoid(self, z):
+    # Numerically stable sigmoid
+    def _pos_sigmoid(self, z):
         return 1 / (1 + np.exp(-z))
+    
+    def  _neg_sigmoid(self, z):
+        exp = np.exp(z)
+        return exp / (exp + 1)
+         
+    def sigmoid(self, z):
+        positive = z >= 0
+        negative = ~positive
+
+        result = np.empty_like(z, dtype=np.float)
+        result[positive] = self._pos_sigmoid(z[positive])
+        result[negative] = self._neg_sigmoid(z[negative])
+
+        return result
     
     
     def derived_sigmoid(self, z):
@@ -90,37 +88,35 @@ class NeuralNetwork():
         return np.where(z <= 0, 0, 1)
     
     def softmax(self, z):
-        s = (np.exp(z - np.max(z)) / np.exp(z - np.max(z)).sum())
-        return s
+        return (np.exp(z - np.max(z)) / np.exp(z - np.max(z)).sum())
     
     def entropy_loss(self, y, y_pred):
         eps = np.finfo(float).eps
         return -np.sum(y * np.log(y_pred + eps))
     
-    
+    # Forward propagation through our neural network
     def forward(self, X):
-        # Forward propagation through our network
-        # input to hidden
+        # Input to hidden layer
         self.x = X
         self.Z[0] = np.dot(self.x, self.W[0]) + self.B[0]
         self.A[0] = self.hidden_activation(self.Z[0])
         
-        #traverse hidden
+        #traverse hidden layers
         for i in range(1, self.nb_hidden_layers):
             self.Z[i] = np.dot(self.A[i-1], self.W[i]) + self.B[i]
             self.A[i] = self.hidden_activation(self.Z[i])
         
-        # Output layer
+        # Hidden to Output layer
         self.Z[self.nb_hidden_layers] = np.dot(self.A[self.nb_hidden_layers-1], self.W[self.nb_hidden_layers]) + self.B[self.nb_hidden_layers]
         self.A[self.nb_hidden_layers] = self.out_activation(self.Z[self.nb_hidden_layers])
         
-        sum = np.sum(self.A[self.nb_hidden_layers], axis=0)
-        
         return self.A[self.nb_hidden_layers]
     
+    # Forward propagation and weight/bias adjustment
     def backward(self, X, y):
         m = X.shape[0]  # number of examples
         
+        # Deltas
         dA = [None] * (self.nb_hidden_layers + 1)
         dZ = [None] * (self.nb_hidden_layers + 1)
         dW = [None] * (self.nb_hidden_layers + 1)
@@ -137,7 +133,7 @@ class NeuralNetwork():
         self.W[-1] -= self.learning_rate * dW[-1]
         self.B[-1] -= self.learning_rate * db[-1]
         
-        #Hidden layers
+        # Hidden layers
         for i in range(self.nb_hidden_layers- 1, 0, -1):
             dA[i] = np.dot(dZ[i+1], self.W[i+1].T)
             dZ[i] = dA[i] * self.hidden_diff(self.Z[i])
@@ -161,16 +157,16 @@ class NeuralNetwork():
         self.W[0] -= self.learning_rate * dW[0]
         self.B[0] -= self.learning_rate * db[0]
 
+    # Head Training function
     def train(self, X, y, epoch):
         if self.validation_type == 'hold_out':
             self.train_holdout_validation(X, y, epoch)
-        elif self.validation_type == 'k_fold':
-            self.train_kfold_validation(X, y, 5, epoch)
         elif self.validation_type == None:
             self.train_no_validation(X, y, epoch)
         else:
             print(f"No such validation method: {self.validation_type}\nTraining aborted!")
          
+    # Training on all data, without validation set
     def train_no_validation(self, X, y, epoch):
         for i in range(epoch):
             y_pred = self.forward(X)
@@ -178,9 +174,9 @@ class NeuralNetwork():
             self.loss.append(loss)
             self.backward(X, y)
             
-            if not self.suppress_log and (i == 0 or i == epoch-1):
-                self.print_training_step(X, y, y_pred, loss, i)    
+            self.print_training_step(X, y, y_pred, loss, i)    
 
+    # Training with hold-out validation method
     def train_holdout_validation(self, X, y, epoch):
         x_train, x_valid, y_train, y_valid = train_test_split( X, y, test_size=self.validation_arg, random_state=0, shuffle=True, stratify=y)
         self.loss_valid = []
@@ -195,14 +191,12 @@ class NeuralNetwork():
             self.backward(x_train, y_train)
             
             self.print_training_step(x_train, y_train, y_pred, loss, i)       
-            
-    def train_kfold_validation(self, X, y, k, epoch):
-        pass
-    
-    
+           
+    # Transform from softmax probabilities to class prediction 
     def prob_to_class(self, pred):
         return np.eye(pred.shape[1])[np.argmax(pred, axis=1)]
     
+    # Logging during training process
     def print_training_step(self, X, y, y_pred, loss, epoch):
         if not self.suppress_log and (epoch == 0 or epoch == epoch-1):
             print(f"Iteration: {epoch+1}")
@@ -216,8 +210,7 @@ class NeuralNetwork():
             print(f"Iteration: {epoch+1}")
             print(f"\tLoss: {loss}")      
         
-        
-
+    # Predict samples
     def predict(self, X):
         if self.tabulate_out == "sigmoid":
             return np.round(self.forward(X))

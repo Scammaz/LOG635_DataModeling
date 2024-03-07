@@ -101,6 +101,8 @@ def create_data_set(dir: Path):
     final_x = {'TRAIN': features_train, 'TEST': features_test}
     final_y = {'TRAIN': outputs_train, 'TEST': outputs_test, 'CLASSES': classes}
     
+    print("Dataset was created!!!")
+    
     pickle_out = open("X.pkl", "wb")
     pickle.dump(final_x, pickle_out)
     pickle_out.close()

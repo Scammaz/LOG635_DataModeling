@@ -1,6 +1,6 @@
 from tabulate import tabulate
 from sklearn.preprocessing import LabelBinarizer
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report, roc_curve
+from sklearn.metrics import confusion_matrix, accuracy_score, classification_report, roc_curve, auc
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import label_binarize
@@ -11,7 +11,10 @@ import matplotlib.pyplot as plt
 import pickle
 import itertools
 import pandas as pd  # Import pandas library
-# import Performance as p
+import knn 
+import svm
+import cnn
+import Performance as p
 from sklearn.metrics import precision_recall_fscore_support
 from itertools import cycle
 
@@ -68,7 +71,7 @@ def NN_test(nombre_de_couches_cachees=2, nombre_de_neurones_par_couche=512, taux
     print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred], y_pred), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
 
     cm = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1))
-    plot_confusion_matrix(cm, classes= B_LABELS, normalize=True, title='Confusion matrix NN, with normalization', save=True, path=(test_res_path(hiddent_activation_func, output_activation_func) + 'conf-mat_' + name + '.png'))
+    p.plot_confusion_matrix_Save(cm, classes= B_LABELS, normalize=True, title='Confusion matrix NN, with normalization', save=True, path=(test_res_path(hiddent_activation_func, output_activation_func) + 'conf-mat_' + name + '.png'))
     
     metrics = precision_recall_fscore_support(y_test, y_pred, average='weighted')
     
@@ -109,126 +112,43 @@ def test(hidden_fn, out_fn):
                     headerBool = False
                     x += 1
                     print(f"Percentage done: {x/percentageDone*100} %")
-
-
-def plot_confusion_matrix(cm, classes,
-                          normalize=False,
-                          title='Confusion matrix',
-                          cmap=plt.cm.Blues,
-                          save=False,
-                          path=''):
-    """
-    This function prints and plots the confusion matrix.
-    Normalization can be applied by setting `normalize=True`.
-    """
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print("Normalized confusion matrix")
-    else:
-        print('Confusion matrix, without normalization')
-
-    print(cm)
-
-    plt.imshow(cm, interpolation='nearest', cmap=cmap, aspect = 'auto')
-    plt.title(title)
-    plt.colorbar()
-    tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
-
-    fmt = '.2f' if normalize else 'd'
-    thresh = cm.max() / 2.
-    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, format(cm[i, j], fmt),
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
-
-    #plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label') 
     
-    if save:
-        plt.savefig(path)
-        plt.clf()
-    else:
-        plt.show()
+def test_modele_apprentissage():
+
+    with open("X.pkl", "rb") as db:
+        features = pickle.load(db)
+    with open("Y.pkl", "rb") as db:
+        outputs = pickle.load(db)
         
+    X_train, X_test = features['TRAIN'], features['TEST']
+    outputs_train, outputs_test, classes = outputs['TRAIN'], outputs['TEST'], outputs['CLASSES']
 
-def ROC(y_test, y_pred):
+    labels_train = [string_label for label in outputs_train for string_label in label.keys()]
+    Y_train = np.array([binary_label for label in outputs_train for binary_label in label.values()])
+
+    labels_test = [string_label for label in outputs_test for string_label in label.keys()]
+    y_test = np.array([binary_label for label in outputs_test for binary_label in label.values()])
+
+    # Diviser les données en données d'entrainement et données de test 
+    # Dans ce cas, j'ai utilisé 20% du données pour le test et 80% pour le données d'entrainement
+    # le parametre responsable à régler la scalabilité de données est le 'test_size'
+    x_train,x_test,y_train,y_test = train_test_split(X_train, Y_train, test_size = 0.2, random_state = 4)
+
+    print(x_train.shape, y_train.shape)
+    print(x_test.shape, y_test.shape)
+
+    # KNN
+
+    # Nous utilisons un K de 40 pour trouver le meilleur K
+    y_pred_KNN = knn.KNN(40, x_train, y_train, x_test, y_test)
     
-    n_classes = 8
+    print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred_KNN], y_pred_KNN), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
 
-    fpr = dict()
-    tpr = dict()
-    roc_auc = dict()
-    lw=2
-    for i in range(n_classes):
-        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_pred[:, i])
-        roc_auc[i] = auc(fpr[i], tpr[i])
-    colors = cycle(['blue', 'red', 'green'])
-    for i, color in zip(range(n_classes), colors):
-        plt.plot(fpr[i], tpr[i], color=color, lw=2,
-                label='ROC curve of class {0} (area = {1:0.2f})'
-                ''.format(i, roc_auc[i]))
-    plt.plot([0, 1], [0, 1], 'k--', lw=lw)
-    plt.xlim([-0.05, 1.0])
-    plt.ylim([0.0, 1.05])
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.title('Receiver operating characteristic for multi-class data')
-    plt.legend(loc="lower right")
-    plt.show()
+    p.Performance(name="KNN", y_test=y_test, y_pred=y_pred_KNN)
+
+    # SVM
+    y_pred_SVM = svm.SVM(x_train, y_train, x_test, y_test)
     
-def test_KNN():
-    # # IRIS
 
-    # iris = load_iris()
-
-    # # Visualiser les caractéristiques = features= primitives de la base iris
-    # # plt.scatter(iris.data[:,1],iris.data[:,2],c=iris.target, cmap=plt.cm.Paired)
-    # # plt.xlabel(iris.feature_names[1])
-    # # plt.ylabel(iris.feature_names[2])
-    # # plt.show()
-
-    # # plt.scatter(iris.data[:,0],iris.data[:,3],c=iris.target, cmap=plt.cm.Paired)
-    # # plt.xlabel(iris.feature_names[0])
-    # # plt.ylabel(iris.feature_names[3])
-    # # plt.show()
-
-    # # le vecteur X contient tous les primitive (en total il y a 4 primitives) des exemples de données iris
-    # # sepal length(cm) | sepal width(cm) | petal length(cm) | petal width
-    # X = iris.data
-    # Y = iris.target
-
-    # #Change the label to one hot vector
-    # Y = label_binarize(Y, classes=[0,1,2,3,4,5,6,7])
-    # print(Y.shape)
-
-    # # Diviser les données en données d'entrainement et données de test 
-    # # Dans ce cas, j'ai utilisé 20% du données pour le test et 80% pour le données d'entrainement
-    # # le parametre responsable à régler la scalabilité de données est le 'test_size'
-    # x_train,x_test,y_train,y_test = train_test_split(X, Y, test_size = 0.2, random_state = 4)
-
-    # print(x_train.shape, y_train.shape)
-    # print(x_test.shape, y_test.shape)
-
-    # # KNN
-
-    # # Nous utilisons un K de 40
-    # y_pred_KNN = p.KNN(40, x_train, y_train, x_test, y_test)
-    # print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred_KNN], y_pred_KNN), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
-
-    # cm = confusion_matrix(y_test.argmax(axis=1), y_pred_KNN.argmax(axis=1))
-    # plot_confusion_matrix(cm, classes= ['0', '1', '2', '3', '4', '5', '6', '7'], normalize=True, title='Confusion matrix KNN, with normalization')
-    
-    # precision, recall, fscore, support = precision_recall_fscore_support(y_test, y_pred_KNN, average='weighted')
-
-    # ROC(y_test, y_pred)
-    
-    # print(precision)
-    # print(recall)
-    # print(fscore)
-    # print(support)
-    pass
 
 main()
