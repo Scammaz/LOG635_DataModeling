@@ -16,9 +16,9 @@ def CNN(x_train, y_train, x_test):
     cnn.add(Dense(16, activation="relu"))
     cnn.add(MaxPooling1D())
     cnn.add(Flatten())
-    cnn.add(Dense(3, activation = 'softmax'))
+    cnn.add(Dense(8, activation = 'softmax'))
     cnn.compile(loss = 'sparse_categorical_crossentropy', 
-        optimizer = "sgd",    #adam           
+                optimizer = "sgd",    #adam           
                 metrics = ['accuracy'])
     cnn.summary()
 

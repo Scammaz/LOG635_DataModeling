@@ -8,7 +8,9 @@ import pickle
 import pandas as pd  # Import pandas library
 import knn 
 import svm
-#import cnn
+import random_forest_classifier as rf
+import mlp_classifier as mlp
+import cnn
 import Performance as p
 from dataset import B_LABELS
 from neural_network import NeuralNetwork
@@ -125,21 +127,30 @@ def test_modele_apprentissage():
     print(X_train.shape, Y_train.shape)
     print(X_test.shape, Y_test.shape)
 
+    # Fonctionne
     # KNN
-
-    # Nous utilisons un K de 40 pour trouver le meilleur K
     # y_pred_KNN = knn.KNN(5, X_train, Y_train, X_test)
-    # print(y_pred_KNN.shape)
     # p.Performance(name="KNN", y_test=Y_test, y_pred=y_pred_KNN)
 
-    # SVM
-    y_pred_SVM = svm.SVM(X_train, Y_train, X_test)
-    print(y_pred_SVM.shape)
-    p.Performance(name="SVM", y_test=Y_test, y_pred=y_pred_SVM)
+    # Fonctionne
+    # Random Forest
+    # y_pred_rf = rf.Random_Forest(X_train, Y_train, X_test)
+    # p.Performance(name="Random Forest", y_test=Y_test, y_pred=y_pred_rf)
 
+    # Fonctionne
+    # Logistic Regression
+    # y_pred_logreg = mlp.MlpClassifier(X_train, Y_train, X_test)
+    # p.Performance(name="Logistic Regression", y_test=Y_test, y_pred=y_pred_logreg)
+
+    # SVM
+    # y_pred_SVM = svm.SVM(X_train, Y_train, X_test)
+    # print("SVM : y_pred => ", y_pred_SVM.shape, "\n")
+    # p.Performance(name="SVM", y_test=Y_test, y_pred=y_pred_SVM)
+    
+    # Fonctionne
     # # CNN
-    # y_pred_CNN = cnn.CNN(X_train, Y_train, X_test)
-    # p.Performance(name="CNN", y_test=Y_test, y_pred=y_pred_CNN)
+    y_pred_CNN = cnn.CNN(X_train, Y_train, X_test)
+    p.Performance(name="CNN", y_test=Y_test, y_pred=y_pred_CNN)
     
 
 main()
