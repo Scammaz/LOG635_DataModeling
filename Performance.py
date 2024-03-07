@@ -11,10 +11,11 @@ class Performance():
         self.y_test = y_test
         self.y_pred = y_pred
 
-        self.metrics = precision_recall_fscore_support(self.y_test, self.y_pred, average='weighted')
-        print('Precision: ', self.metrics[0], '\n')
-        print('Recall: ', self.metrics[1], '\n')
-        print('F1 score: ', self.metrics[2], '\n')
+        if self.name != 'CNN':
+            self.metrics = precision_recall_fscore_support(self.y_test, self.y_pred, average='weighted')
+            print('Precision: ', self.metrics[0], '\n')
+            print('Recall: ', self.metrics[1], '\n')
+            print('F1 score: ', self.metrics[2], '\n')
 
         # Matrix de confusion
         self.cm = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1), normalize='true')

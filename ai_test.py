@@ -122,7 +122,7 @@ def test_modele_apprentissage():
     # # Diviser les données en données d'entrainement et données de test 
     # # Dans ce cas, j'ai utilisé 20% du données pour le test et 80% pour le données d'entrainement
     # # le parametre responsable à régler la scalabilité de données est le 'test_size'
-    # X_train,X_test,Y_train,Y_test = train_test_split(X_train, Y_train, test_size = 0.2, random_state = 4)
+    X_train,X_test,Y_train,Y_test = train_test_split(X_train, Y_train, test_size = 0.8, random_state = 4)
 
     print(X_train.shape, Y_train.shape)
     print(X_test.shape, Y_test.shape)
@@ -143,14 +143,14 @@ def test_modele_apprentissage():
     # p.Performance(name="Logistic Regression", y_test=Y_test, y_pred=y_pred_logreg)
 
     # SVM
-    # y_pred_SVM = svm.SVM(X_train, Y_train, X_test)
-    # print("SVM : y_pred => ", y_pred_SVM.shape, "\n")
-    # p.Performance(name="SVM", y_test=Y_test, y_pred=y_pred_SVM)
+    y_pred_SVM = svm.SVM(X_train, Y_train, X_test)
+    print("SVM : y_pred => ", y_pred_SVM.shape, "\n")
+    p.Performance(name="SVM", y_test=Y_test, y_pred=y_pred_SVM)
     
     # Fonctionne
     # # CNN
-    y_pred_CNN = cnn.CNN(X_train, Y_train, X_test)
-    p.Performance(name="CNN", y_test=Y_test, y_pred=y_pred_CNN)
+    # y_pred_CNN = cnn.CNN(X_train, Y_train, X_test)
+    # print("CNN : y_pred => ", y_pred_CNN.shape, "\n")
+    # p.Performance(name="CNN", y_test=Y_test, y_pred=y_pred_CNN)
     
-
 main()
