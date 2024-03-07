@@ -1,4 +1,4 @@
-from sklearn.metrics import confusion_matrix, accuracy_score, roc_curve, auc, precision_score, recall_score, f1_score
+from sklearn.metrics import confusion_matrix, roc_curve, auc, precision_recall_fscore_support
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import cycle
@@ -7,25 +7,21 @@ from dataset import B_LABELS
 class Performance():
     def __init__(self, name, y_test, y_pred):
 
-        # accuracy: (tp + tn) / (fp + fn)
-        self.accuracy = accuracy_score(y_test, y_pred)
-        print('Accuracy: %f' % self.accuracy, '\n')
-        # precision tp / (tp + fp)
-        self.precision = precision_score(y_test, y_pred, average='macro')
-        print('Precision: %f' % self.precision, '\n')
-        # recall: tp / (tp + fn)
-        self.recall = recall_score(y_test, y_pred, average='macro')
-        print('Recall: %f' % self.recall, '\n')
-        # f1: 2 tp / (2 tp + fp + fn)
-        self.f1 = f1_score(y_test, y_pred, average='macro')
-        print('F1 score: %f' % self.f1, '\n')
+        self.name = name
+        self.y_test = y_test
+        self.y_pred = y_pred
+
+        self.metrics = precision_recall_fscore_support(self.y_test, self.y_pred, average='weighted')
+        print('Precision: ', self.metrics[0], '\n')
+        print('Recall: ', self.metrics[1], '\n')
+        print('F1 score: ', self.metrics[2], '\n')
 
         # Matrix de confusion
         self.cm = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1), normalize='true')
-        plot_confusion_matrix(self.cm, classes= B_LABELS, normalize=True, title='Confusion matrix %s, with normalization' % name)
+        plot_confusion_matrix(self.cm, classes= B_LABELS, normalize=True, title='Confusion matrix %s, with normalization' % self.name)
         
         # Courbe ROC
-        ROC(y_test, y_pred)
+        ROC(self.y_test, self.y_pred)
     
 
 def plot_confusion_matrix(cm, classes,
@@ -62,6 +58,7 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     plt.tight_layout()
+    plt.show()
 
 def plot_confusion_matrix_Save(cm, classes,
                           normalize=False,

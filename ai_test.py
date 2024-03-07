@@ -1,23 +1,15 @@
 from tabulate import tabulate
 from sklearn.preprocessing import LabelBinarizer
-from sklearn.metrics import confusion_matrix, accuracy_score, classification_report, roc_curve, auc
-from sklearn.datasets import load_iris
+from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import label_binarize
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn import metrics
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-import itertools
 import pandas as pd  # Import pandas library
 import knn 
 import svm
-import cnn
+#import cnn
 import Performance as p
-from sklearn.metrics import precision_recall_fscore_support
-from itertools import cycle
-
 from dataset import B_LABELS
 from neural_network import NeuralNetwork
 from test_RN import NeuralNetwork2
@@ -79,11 +71,7 @@ def NN_test(nombre_de_couches_cachees=2, nombre_de_neurones_par_couche=512, taux
 
 def main():
     
-    hidden_fn = ["sigmoid", "ReLU"]
-    out_fn = ["sigmoid", 'softmax']
-    
-    for i in range(2):
-        test(hidden_fn[i], out_fn[i])
+    test_modele_apprentissage()
 
 
 def test(hidden_fn, out_fn):
@@ -127,35 +115,31 @@ def test_modele_apprentissage():
     Y_train = np.array([binary_label for label in outputs_train for binary_label in label.values()])
 
     labels_test = [string_label for label in outputs_test for string_label in label.keys()]
-    y_test = np.array([binary_label for label in outputs_test for binary_label in label.values()])
+    Y_test = np.array([binary_label for label in outputs_test for binary_label in label.values()])
 
-    # Diviser les données en données d'entrainement et données de test 
-    # Dans ce cas, j'ai utilisé 20% du données pour le test et 80% pour le données d'entrainement
-    # le parametre responsable à régler la scalabilité de données est le 'test_size'
-    x_train,x_test,y_train,y_test = train_test_split(X_train, Y_train, test_size = 0.2, random_state = 4)
+    # # Diviser les données en données d'entrainement et données de test 
+    # # Dans ce cas, j'ai utilisé 20% du données pour le test et 80% pour le données d'entrainement
+    # # le parametre responsable à régler la scalabilité de données est le 'test_size'
+    # X_train,X_test,Y_train,Y_test = train_test_split(X_train, Y_train, test_size = 0.2, random_state = 4)
 
-    print(x_train.shape, y_train.shape)
-    print(x_test.shape, y_test.shape)
+    print(X_train.shape, Y_train.shape)
+    print(X_test.shape, Y_test.shape)
 
     # KNN
 
     # Nous utilisons un K de 40 pour trouver le meilleur K
-    y_pred_KNN = knn.KNN(40, x_train, y_train, x_test, y_test)
-    
-    print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred_KNN], y_pred_KNN), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
-
-    p.Performance(name="KNN", y_test=y_test, y_pred=y_pred_KNN)
+    # y_pred_KNN = knn.KNN(5, X_train, Y_train, X_test)
+    # print(y_pred_KNN.shape)
+    # p.Performance(name="KNN", y_test=Y_test, y_pred=y_pred_KNN)
 
     # SVM
-    y_pred_SVM = svm.SVM(x_train, y_train, x_test, y_test)
-    print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred_SVM], y_pred_SVM), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
-    p.Performance(name="SVM", y_test=y_test, y_pred=y_pred_SVM)
+    y_pred_SVM = svm.SVM(X_train, Y_train, X_test)
+    print(y_pred_SVM.shape)
+    p.Performance(name="SVM", y_test=Y_test, y_pred=y_pred_SVM)
 
-    # CNN
-    y_pred_CNN = cnn.CNN(x_train, y_train, x_test, y_test)
-    print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred_CNN], y_pred_CNN), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
-    p.Performance(name="CNN", y_test=y_test, y_pred=y_pred_CNN)
+    # # CNN
+    # y_pred_CNN = cnn.CNN(X_train, Y_train, X_test)
+    # p.Performance(name="CNN", y_test=Y_test, y_pred=y_pred_CNN)
     
-
 
 main()
