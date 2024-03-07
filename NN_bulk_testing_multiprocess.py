@@ -1,3 +1,4 @@
+import copy
 from sklearn.preprocessing import LabelBinarizer
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_recall_fscore_support
@@ -17,39 +18,39 @@ from test_RN import NeuralNetwork2
 label_encoder = LabelBinarizer()
 test_res_path = lambda h, o : f'test_results/{h}_{o}/'
     
-def testV2_init(X_data, Y_labels, nb_parallel_training, hidden_fn='sigmoid', out_fn='sigmoid'):
+def testV2_init(X_data, Y_labels, hidden_fn='sigmoid', out_fn='sigmoid', nb_parallel_jobs=1):
     path = f'{test_res_path(hidden_fn, out_fn)}resultsAiTraining.csv'
     
-    nb_hidden_layers = [1, 2, 3]
-    nb_node_per_layer = [512, 1024, 2048]
-    learning_rates = [0.01, 0.05, 0.1]
-    epochs = [500]
+    nb_hidden_layers = [1, 2, 3, 4]
+    nb_node_per_layer = [256, 512, 1024, 2048]
+    learning_rates = [0.01, 0.02, 0.05, 0.1]
+    epochs = [500, 1000, 2500, 5000]
     
     procs = []
     csv_header = True
     start_time = time.time()
     
     test_len = len(nb_hidden_layers) * len(nb_node_per_layer) * len(learning_rates) * len(epochs)
-    progress = Value('i', 0)
-    semaphore = Semaphore(nb_parallel_training)
+    test_progress = Value('i', 0)
+    semaphore = Semaphore(nb_parallel_jobs)
     
     for hd in nb_hidden_layers:
         for npl in nb_node_per_layer:
             for lr in learning_rates:
                 for e in epochs:
                     semaphore.acquire()
-                    p = Process(target=testV2, args=[X_data, Y_labels, hd, npl, lr, e, hidden_fn, out_fn, path, csv_header, test_len, progress, semaphore])
+                    p = Process(target=testV2, args=[copy.deepcopy(X_data), copy.deepcopy(Y_labels),hd, npl, lr, e, hidden_fn, out_fn, path, csv_header, test_len, test_progress, semaphore])
                     if csv_header:
                         csv_header = False
                     procs.append(p)
                     p.start()
-    
+                    
     for p in procs:
         p.join()
         
     print(f"Tests finished in {time.time() - start_time} seconds")     
 
-def testV2(X, Y, hidden_layers, node_per_layer, learn_rate, epochs, hidden_fn, out_fn, res_path, header_bool, test_len, progress, semaphore):
+def testV2(X, Y, hidden_layers, node_per_layer, learn_rate, epochs, hidden_fn, out_fn, res_path, header_bool, test_len, test_progress, semaphore):
     print(f"hidden_layers = {hidden_layers}, node_per_layer = {node_per_layer}, learn_rate = {learn_rate}, epochs = {epochs}")
     name = f'{hidden_fn}_{out_fn}_{hidden_layers}_{node_per_layer}_{learn_rate}_{epochs}'
     
@@ -78,19 +79,15 @@ def testV2(X, Y, hidden_layers, node_per_layer, learn_rate, epochs, hidden_fn, o
     df = pd.DataFrame(result, columns=['Hidden Layers', 'Nodes per Layer', 'Learning Rate', 'Epochs', 'Loss', 'Precision', 'Recall', 'F1', 'Training_time (sec)'])
     df.to_csv(res_path, mode='a', header=header_bool, index=False)
     
-    progress.value += 1
-    print(f"Percentage done: {(progress.value/test_len)*100} %")
-    semaphore.release()
+    test_progress.value += 1
+    print(f"Percentage done: {(test_progress.value/test_len)*100} %")
 
 
 def NN_test(features, outputs, validation=None, validation_arg=0.1, hidden_layers=2, nodes_per_layer=512, learning_rate=0.2, epochs=500, hidden_activation_func='sigmoid', output_activation_func='sigmoid', suppress_log=True):
     X_train, X_test = features['TRAIN'], features['TEST']
-    outputs_train, outputs_test, classes = outputs['TRAIN'], outputs['TEST'], outputs['CLASSES']
+    outputs_train, outputs_test = outputs['TRAIN'], outputs['TEST']
 
-    labels_train = [string_label for label in outputs_train for string_label in label.keys()]
     y_train = np.array([binary_label for label in outputs_train for binary_label in label.values()])
-
-    labels_test = [string_label for label in outputs_test for string_label in label.keys()]
     y_test = np.array([binary_label for label in outputs_test for binary_label in label.values()])
     
     NN = NeuralNetwork(
@@ -109,12 +106,13 @@ def NN_test(features, outputs, validation=None, validation_arg=0.1, hidden_layer
     # Train
     NN.train(X_train, y_train, epochs)
     
-    # Tester
+    # Test
     y_pred = NN.predict(X_test)
 
     # Confusion Matrix
     cm = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1))
     
+    # Metrics
     precision, recall, fscore, support = precision_recall_fscore_support(y_test, y_pred, average='weighted')
     
     results = {
@@ -199,14 +197,28 @@ if __name__ == "__main__":
     with open("Y.pkl", "rb") as db:
         outputs = pickle.load(db)
     
-    # testV2_init(features, outputs, nb_parallel_training=1, hidden_fn='sigmoid', out_fn='softmax')
+    testV2_init(features, outputs, hidden_fn='sigmoid', out_fn='sigmoid', nb_parallel_jobs=2)
     
-    results = NN_test(features, outputs, 'hold_out', 0.2, 2, 2048, 0.02, 2000, 'sigmoid', 'softmax', False)
+    # results = NN_test(
+    #     features=features, 
+    #     outputs=outputs, 
+    #     hidden_layers=1, 
+    #     nodes_per_layer=2048, 
+    #     learning_rate=0.5, 
+    #     epochs=1000, 
+    #     hidden_activation_func='sigmoid', 
+    #     output_activation_func='softmax', 
+    #     suppress_log=False,
+    #     validation=None,
+    #     validation_arg=None
+    #     )
     
-    print(f"Loss: {results['loss'][-1]}\nPrecision: {results['precision']}\nRecall: {results['recall']}\nF1 score: {results['fscore']}")
+    # loss_validation = results.get('loss_validation', None)
     
-    plot_loss_curve(results['loss'], results['loss_valid'], save=False)
-    plot_confusion_matrix(results['conf_matrix'], classes= B_LABELS, normalize=True, title='Confusion matrix NN, with normalization')
+    # print(f"Loss: {results['loss'][-1]}\nPrecision: {results['precision']}\nRecall: {results['recall']}\nF1 score: {results['fscore']}")
+    
+    # plot_loss_curve(results['loss'], loss_validation, save=False)
+    # plot_confusion_matrix(results['conf_matrix'], classes= B_LABELS, normalize=True, title='Confusion matrix NN, with normalization')
     
     
         
