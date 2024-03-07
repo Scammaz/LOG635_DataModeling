@@ -148,6 +148,13 @@ def test_modele_apprentissage():
 
     # SVM
     y_pred_SVM = svm.SVM(x_train, y_train, x_test, y_test)
+    print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred_SVM], y_pred_SVM), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
+    p.Performance(name="SVM", y_test=y_test, y_pred=y_pred_SVM)
+
+    # CNN
+    y_pred_CNN = cnn.CNN(x_train, y_train, x_test, y_test)
+    print(tabulate(zip(X_test, labels_test, [classes.get(tuple(o), "--") for o in y_pred_CNN], y_pred_CNN), headers=["Input", "Actual", "Predicted", "Pred_Out"]))
+    p.Performance(name="CNN", y_test=y_test, y_pred=y_pred_CNN)
     
 
 
