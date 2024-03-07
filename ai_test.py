@@ -11,6 +11,7 @@ import svm
 import random_forest_classifier as rf
 import mlp_classifier as mlp
 import cnn
+import nn
 import Performance as p
 from dataset import B_LABELS
 from neural_network import NeuralNetwork
@@ -122,7 +123,7 @@ def test_modele_apprentissage():
     # # Diviser les données en données d'entrainement et données de test 
     # # Dans ce cas, j'ai utilisé 20% du données pour le test et 80% pour le données d'entrainement
     # # le parametre responsable à régler la scalabilité de données est le 'test_size'
-    X_train,X_test,Y_train,Y_test = train_test_split(X_train, Y_train, test_size = 0.8, random_state = 4)
+    # X_train,X_test,Y_train,Y_test = train_test_split(X_train, Y_train, test_size = 0.8, random_state = 4)
 
     print(X_train.shape, Y_train.shape)
     print(X_test.shape, Y_test.shape)
@@ -142,15 +143,21 @@ def test_modele_apprentissage():
     # y_pred_logreg = mlp.MlpClassifier(X_train, Y_train, X_test)
     # p.Performance(name="Logistic Regression", y_test=Y_test, y_pred=y_pred_logreg)
 
+    # Fonctionne
     # SVM
-    y_pred_SVM = svm.SVM(X_train, Y_train, X_test)
-    print("SVM : y_pred => ", y_pred_SVM.shape, "\n")
-    p.Performance(name="SVM", y_test=Y_test, y_pred=y_pred_SVM)
+    # y_pred_SVM = svm.SVM(X_train, Y_train, X_test)
+    # print("SVM : y_pred => ", y_pred_SVM.shape, "\n")
+    # p.Performance(name="SVM", y_test=Y_test, y_pred=y_pred_SVM)
     
     # Fonctionne
     # # CNN
     # y_pred_CNN = cnn.CNN(X_train, Y_train, X_test)
     # print("CNN : y_pred => ", y_pred_CNN.shape, "\n")
     # p.Performance(name="CNN", y_test=Y_test, y_pred=y_pred_CNN)
+
+    # NN
+    y_pred_NN = nn.nn(X_train, Y_train, X_test, Y_test)
+    print("NN : y_pred => ", y_pred_NN.shape, "\n")
+    p.Performance(name="NN", y_test=Y_test, y_pred=y_pred_NN)
     
 main()
