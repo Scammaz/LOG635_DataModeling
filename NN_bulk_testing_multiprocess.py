@@ -21,9 +21,9 @@ test_res_path = lambda h, o : f'test_results/{h}_{o}/'
 def testV2_init(X_data, Y_labels, hidden_fn='sigmoid', out_fn='sigmoid', nb_parallel_jobs=1):
     path = f'{test_res_path(hidden_fn, out_fn)}resultsAiTraining.csv'
     
-    nb_hidden_layers = [1, 2, 3, 4]
-    nb_node_per_layer = [256, 512, 1024, 2048]
-    learning_rates = [0.01, 0.02, 0.05, 0.1]
+    nb_hidden_layers = [2]
+    nb_node_per_layer = [2048]
+    learning_rates = [0.05, 0.1]
     epochs = [500, 1000, 2500, 5000]
     
     procs = []
@@ -81,6 +81,7 @@ def testV2(X, Y, hidden_layers, node_per_layer, learn_rate, epochs, hidden_fn, o
     
     test_progress.value += 1
     print(f"Percentage done: {(test_progress.value/test_len)*100} %")
+    semaphore.release()
 
 
 def NN_test(features, outputs, validation=None, validation_arg=0.1, hidden_layers=2, nodes_per_layer=512, learning_rate=0.2, epochs=500, hidden_activation_func='sigmoid', output_activation_func='sigmoid', suppress_log=True):
@@ -197,7 +198,7 @@ if __name__ == "__main__":
     with open("Y.pkl", "rb") as db:
         outputs = pickle.load(db)
     
-    testV2_init(features, outputs, hidden_fn='sigmoid', out_fn='sigmoid', nb_parallel_jobs=2)
+    testV2_init(features, outputs, hidden_fn='sigmoid', out_fn='sigmoid', nb_parallel_jobs=4)
     
     # results = NN_test(
     #     features=features, 
