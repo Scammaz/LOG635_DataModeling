@@ -23,11 +23,6 @@ def print_dataset():
     with open("X.pkl", "rb") as db:
         features = pickle.load(db)
     with open("Y.pkl", "rb") as db:
-<<<<<<< Updated upstream
-        labels = pickle.load(db) 
-              
-    #print(tabulate(zip(features["TEST"], labels["TEST"]), headers=["Features", "Label"]))
-=======
         outputs = pickle.load(db)
         
     X_train, X_test = features['TRAIN'], features['TEST']
@@ -98,7 +93,6 @@ def test():
                     headerBool = False
                     x += 1
                     print(f"Percentage done: {x/percentageDone*100} %")
->>>>>>> Stashed changes
 
 
 def plot_confusion_matrix(cm, classes,
@@ -134,23 +128,9 @@ def plot_confusion_matrix(cm, classes,
     #plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label') 
-<<<<<<< Updated upstream
-    plt.show()
-    
-    
-def NN_test(nombre_de_couches_cachees=2, nombre_de_neurones_par_couche=1024, taux_dapprentissage=0.01, nombre_diterations=500):
-    with open("X.pkl", "rb") as db:
-        features = pickle.load(db)
-    with open("Y.pkl", "rb") as db:
-        outputs = pickle.load(db)
-        
-    X_train, X_test = features['TRAIN'], features['TEST']
-    outputs_train, outputs_test, classes = outputs['TRAIN'], outputs['TEST'], outputs['CLASSES']
-=======
     plt.savefig(f"./LearningData/confusion_matrix{savename}.png")
     #plt.show()
     
->>>>>>> Stashed changes
 
     labels_train = [string_label for label in outputs_train for string_label in label.keys()]
     y_train = np.array([binary_label for label in outputs_train for binary_label in label.values()])
@@ -225,11 +205,7 @@ test()
     
 def main():
     # print_dataset()
-<<<<<<< Updated upstream
-    #NN_test()
-=======
     # NN_test()
->>>>>>> Stashed changes
     test()
 
 main()

@@ -38,10 +38,6 @@ class NeuralNetwork():
          
         
     def sigmoid(self, z):
-<<<<<<< Updated upstream
-        s = 1 / (1 + np.exp(-z))
-        return s
-=======
         positive = z >= 0
         negative = ~positive
 
@@ -51,7 +47,6 @@ class NeuralNetwork():
 
         return result
     
->>>>>>> Stashed changes
     
     def derived_sigmoid(self, z):
         return self.sigmoid(z) * (1 - self.sigmoid(z))
