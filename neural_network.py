@@ -206,7 +206,7 @@ class NeuralNetwork():
                 print(tabulate(zip(X, y, self.prob_to_class(y_pred)), headers=["Input", "Actual", "Predicted"]))    
             print(f"Loss: {loss}")                
             print("\n")
-        elif not self.suppress_log and epoch % 50 == 0:
+        elif not self.suppress_log and epoch % 500 == 0:
             print(f"Iteration: {epoch+1}")
             print(f"\tLoss: {loss}")      
         

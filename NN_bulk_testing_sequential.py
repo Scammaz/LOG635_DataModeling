@@ -193,28 +193,28 @@ if __name__ == "__main__":
     with open("Y.pkl", "rb") as db:
         outputs = pickle.load(db)
     
-    testV2_init(features, outputs, hidden_fn='sigmoid', out_fn='sigmoid')
+    # testV2_init(features, outputs, hidden_fn='sigmoid', out_fn='sigmoid')
     
-    # results = NN_test(
-    #     features=features, 
-    #     outputs=outputs, 
-    #     hidden_layers=1, 
-    #     nodes_per_layer=2048, 
-    #     learning_rate=0.5, 
-    #     epochs=1000, 
-    #     hidden_activation_func='sigmoid', 
-    #     output_activation_func='softmax', 
-    #     suppress_log=False,
-    #     validation=None,
-    #     validation_arg=None
-    #     )
+    results = NN_test(
+        features=features, 
+        outputs=outputs, 
+        hidden_layers=1, 
+        nodes_per_layer=256, 
+        learning_rate=0.1, 
+        epochs=5000, 
+        hidden_activation_func='sigmoid', 
+        output_activation_func='sigmoid', 
+        suppress_log=False,
+        validation=None,
+        validation_arg=None
+        )
     
-    # loss_validation = results.get('loss_validation', None)
+    loss_validation = results.get('loss_valid', None)
     
-    # print(f"Loss: {results['loss'][-1]}\nPrecision: {results['precision']}\nRecall: {results['recall']}\nF1 score: {results['fscore']}")
+    print(f"Loss: {results['loss'][-1]}\nPrecision: {results['precision']}\nRecall: {results['recall']}\nF1 score: {results['fscore']}")
     
-    # plot_loss_curve(results['loss'], loss_validation, save=False)
-    # plot_confusion_matrix(results['conf_matrix'], classes= B_LABELS, normalize=True, title='Confusion matrix NN, with normalization')
+    plot_loss_curve(results['loss'], loss_validation, save=False)
+    plot_confusion_matrix(results['conf_matrix'], classes= B_LABELS, normalize=True, title='Confusion matrix NN, with normalization')
     
     
         
