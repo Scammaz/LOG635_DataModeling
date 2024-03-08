@@ -1,5 +1,5 @@
 from tabulate import tabulate
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import LabelBinarizer, MultiLabelBinarizer
 from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -123,41 +123,42 @@ def test_modele_apprentissage():
     # # Diviser les données en données d'entrainement et données de test 
     # # Dans ce cas, j'ai utilisé 20% du données pour le test et 80% pour le données d'entrainement
     # # le parametre responsable à régler la scalabilité de données est le 'test_size'
-    # X_train,X_test,Y_train,Y_test = train_test_split(X_train, Y_train, test_size = 0.8, random_state = 4)
 
-    print(X_train.shape, Y_train.shape)
-    print(X_test.shape, Y_test.shape)
+    for ts in [0.8, 0.6, 0.4, 0.2]:
+        
+        X_train,X_test,Y_train,Y_test = train_test_split(X_train, Y_train, test_size = ts, random_state = 4)
 
-    # Fonctionne
-    # KNN
-    # y_pred_KNN = knn.KNN(5, X_train, Y_train, X_test)
-    # p.Performance(name="KNN", y_test=Y_test, y_pred=y_pred_KNN)
+        # print(X_train.shape, Y_train.shape)
+        # print(X_test.shape, Y_test.shape)
 
-    # Fonctionne
-    # Random Forest
-    # y_pred_rf = rf.Random_Forest(X_train, Y_train, X_test)
-    # p.Performance(name="Random Forest", y_test=Y_test, y_pred=y_pred_rf)
+        # Fonctionne
+        # KNN
+        y_pred_KNN = knn.KNN(5, X_train, Y_train, X_test)
+        p.Performance(test_size=ts, name="KNN", y_test=Y_test, y_pred=y_pred_KNN)
 
-    # Fonctionne
-    # Logistic Regression
-    # y_pred_logreg = mlp.MlpClassifier(X_train, Y_train, X_test)
-    # p.Performance(name="Logistic Regression", y_test=Y_test, y_pred=y_pred_logreg)
+        # Fonctionne
+        # Random Forest
+        y_pred_rf = rf.Random_Forest(X_train, Y_train, X_test)
+        p.Performance(test_size=ts, name="Random Forest", y_test=Y_test, y_pred=y_pred_rf)
 
-    # Fonctionne
-    # SVM
-    # y_pred_SVM = svm.SVM(X_train, Y_train, X_test)
-    # print("SVM : y_pred => ", y_pred_SVM.shape, "\n")
-    # p.Performance(name="SVM", y_test=Y_test, y_pred=y_pred_SVM)
-    
-    # Fonctionne
-    # # CNN
-    # y_pred_CNN = cnn.CNN(X_train, Y_train, X_test)
-    # print("CNN : y_pred => ", y_pred_CNN.shape, "\n")
-    # p.Performance(name="CNN", y_test=Y_test, y_pred=y_pred_CNN)
+        # Fonctionne
+        #Logistic Regression
+        y_pred_logreg = mlp.MlpClassifier(X_train, Y_train, X_test)
+        p.Performance(test_size=ts, name="Logistic Regression", y_test=Y_test, y_pred=y_pred_logreg)
 
-    # NN
-    y_pred_NN = nn.nn(X_train, Y_train, X_test, Y_test)
-    print("NN : y_pred => ", y_pred_NN.shape, "\n")
-    p.Performance(name="NN", y_test=Y_test, y_pred=y_pred_NN)
+        # Fonctionne
+        # SVM
+        y_pred_SVM = svm.SVM(X_train, Y_train, X_test)
+        p.Performance(test_size=ts, name="SVM", y_test=Y_test, y_pred=y_pred_SVM)
+        
+        # Fonctionne
+        # # CNN
+        y_pred_CNN = cnn.CNN(X_train, Y_train, X_test)
+        p.Performance(test_size=ts, name="CNN", y_test=Y_test, y_pred=y_pred_CNN)
+
+        # Fonctionne
+        # NN
+        y_pred_NN = nn.nn(X_train, Y_train, X_test, Y_test)
+        p.Performance(test_size=ts, name="NN", y_test=Y_test, y_pred=y_pred_NN)
     
 main()

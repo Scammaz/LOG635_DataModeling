@@ -1,3 +1,4 @@
+from sklearn.calibration import label_binarize
 from sklearn.metrics import confusion_matrix, roc_curve, auc, precision_recall_fscore_support
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,24 +6,39 @@ from itertools import cycle
 from dataset import B_LABELS
 
 class Performance():
-    def __init__(self, name, y_test, y_pred):
-
+    def __init__(self, test_size, name, y_test, y_pred):
+        
+        self.test_size = test_size
         self.name = name
         self.y_test = y_test
         self.y_pred = y_pred
+        self.y_test_1d = np.argmax(y_test, axis=1)
 
         if self.name != 'CNN':
-            self.metrics = precision_recall_fscore_support(self.y_test, self.y_pred, average='weighted')
-            print('Precision: ', self.metrics[0], '\n')
-            print('Recall: ', self.metrics[1], '\n')
-            print('F1 score: ', self.metrics[2], '\n')
+
+            if(self.name == 'NN'):
+                self.metrics = precision_recall_fscore_support(self.y_test_1d, self.y_pred, average='weighted')
+            else:
+                self.metrics = precision_recall_fscore_support(self.y_test, self.y_pred, average='weighted')
+
+            print('Precision: ' , self.metrics[0], '\n')
+            print('Recall: '    , self.metrics[1], '\n')
+            print('F1 score: '  , self.metrics[2], '\n')
 
         # Matrix de confusion
-        self.cm = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1), normalize='true')
-        plot_confusion_matrix(self.cm, classes= B_LABELS, normalize=True, title='Confusion matrix %s, with normalization' % self.name)
+        if self.name != 'NN':
+            self.cm = confusion_matrix(self.y_test_1d, y_pred.argmax(axis=1), normalize='true')
+        else: 
+            self.cm = confusion_matrix(self.y_test_1d, y_pred, normalize='true')
         
+        training_size = 100 - (self.test_size*100)
+        plot_confusion_matrix(self.cm, classes= B_LABELS, normalize=True, title='Confusion matrix %s, with normalization, %d%% of training' %( self.name, training_size))
+
         # Courbe ROC
-        ROC(self.y_test, self.y_pred)
+        # if self.name != 'NN':
+        #     ROC(self.y_test, y_pred)
+        # else:
+        #     ROC(self.y_test, label_binarize(self.y_pred, classes=list(range(8))))
     
 
 def plot_confusion_matrix(cm, classes,
