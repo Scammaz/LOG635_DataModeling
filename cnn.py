@@ -24,7 +24,7 @@ def CNN(x_train, y_train, x_test):
 
     # B- Phase d'apprentissage
     history=cnn.fit(x_train, y_train.argmax(axis=1),
-                    validation_split= 0.2, batch_size=16,epochs=100, verbose=1)
+                    validation_split= 0.2, batch_size=16,epochs=30, verbose=1)
     
     print('--------------------------------------------------------------------\n'
       'Evaluate the trained CNN ...')
