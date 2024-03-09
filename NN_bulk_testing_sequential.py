@@ -11,9 +11,8 @@ import itertools
 import time
 from multiprocessing import Process, Value, Semaphore
 
-from dataset import B_LABELS
-from neural_network import NeuralNetwork
-from test_RN import NeuralNetwork2
+from DatasetPrepare.dataset import B_LABELS
+from models.rn import NeuralNetwork
 
 label_encoder = LabelBinarizer()
 test_res_path = lambda h, o : f'test_results/{h}_{o}/'
@@ -188,34 +187,12 @@ def plot_confusion_matrix(cm, classes,
         
                 
 if __name__ == "__main__": 
-    with open("X.pkl", "rb") as db:
+    with open("DatasetPrepare/X.pickle", "rb") as db:
         features = pickle.load(db)
-    with open("Y.pkl", "rb") as db:
+    with open("DatasetPrepare/Y.pickle", "rb") as db:
         outputs = pickle.load(db)
     
-    # testV2_init(features, outputs, hidden_fn='sigmoid', out_fn='sigmoid')
-    
-    results = NN_test(
-        features=features, 
-        outputs=outputs, 
-        hidden_layers=1, 
-        nodes_per_layer=256, 
-        learning_rate=0.1, 
-        epochs=5000, 
-        hidden_activation_func='sigmoid', 
-        output_activation_func='sigmoid', 
-        suppress_log=False,
-        validation=None,
-        validation_arg=None
-        )
-    
-    loss_validation = results.get('loss_valid', None)
-    
-    print(f"Loss: {results['loss'][-1]}\nPrecision: {results['precision']}\nRecall: {results['recall']}\nF1 score: {results['fscore']}")
-    
-    plot_loss_curve(results['loss'], loss_validation, save=False)
-    plot_confusion_matrix(results['conf_matrix'], classes= B_LABELS, normalize=True, title='Confusion matrix NN, with normalization')
-    
+    testV2_init(features, outputs, hidden_fn='sigmoid', out_fn='sigmoid')
     
         
     

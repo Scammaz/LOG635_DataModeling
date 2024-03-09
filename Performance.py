@@ -1,44 +1,48 @@
-from sklearn.calibration import label_binarize
-from sklearn.metrics import confusion_matrix, roc_curve, auc, precision_recall_fscore_support
+from sklearn.metrics import confusion_matrix, roc_curve, auc, precision_recall_fscore_support, f1_score, precision_score, recall_score
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import cycle
-from dataset import B_LABELS
+from DatasetPrepare.dataset import B_LABELS
 
 class Performance():
-    def __init__(self, test_size, name, y_test, y_pred):
+    def __init__(self, test_size, name, y_test, metrics):
         
         self.test_size = test_size
         self.name = name
         self.y_test = y_test
-        self.y_pred = y_pred
+        self.y_pred = metrics['y_pred']
         self.y_test_1d = np.argmax(y_test, axis=1)
+        self.train_time = metrics['train_time']
+        self.predict_time = metrics['predict_time']
 
         if self.name != 'CNN':
+            self.metrics = precision_recall_fscore_support(self.y_test, self.y_pred, average='weighted')
+        else:
+            y_pred = np.argmax(self.y_pred, axis=1)
+            y_test = np.argmax(self.y_test, axis=1)
 
-            if(self.name == 'NN'):
-                self.metrics = precision_recall_fscore_support(self.y_test_1d, self.y_pred, average='weighted')
-            else:
-                self.metrics = precision_recall_fscore_support(self.y_test, self.y_pred, average='weighted')
-
-            print('Precision: ' , self.metrics[0], '\n')
-            print('Recall: '    , self.metrics[1], '\n')
-            print('F1 score: '  , self.metrics[2], '\n')
+            self.metrics = np.zeros(3)
+            # precision tp / (tp + fp)
+            self.metrics[0] = precision_score(y_test, y_pred, average='macro')
+            # recall: tp / (tp + fn)
+            self.metrics[1] = recall_score(y_test, y_pred, average='macro')
+            # f1: 2 tp / (2 tp + fp + fn)
+            self.metrics[2] = f1_score(y_test, y_pred, average='macro')
+            
+        print('Precision: '     , self.metrics[0],  '\n')
+        print('Recall: '        , self.metrics[1],  '\n')
+        print('F1 score: '      , self.metrics[2],  '\n')
+        print('Train Time: '    , self.train_time,  '\n')
+        print('Predict Time: '  , self.predict_time,'\n')
 
         # Matrix de confusion
         if self.name != 'NN':
-            self.cm = confusion_matrix(self.y_test_1d, y_pred.argmax(axis=1), normalize='true')
+            self.cm = confusion_matrix(self.y_test_1d, self.y_pred.argmax(axis=1), normalize='true')
         else: 
-            self.cm = confusion_matrix(self.y_test_1d, y_pred, normalize='true')
+            self.cm = confusion_matrix(self.y_test_1d, self.y_pred, normalize='true')
         
-        training_size = 100 - (self.test_size*100)
-        plot_confusion_matrix(self.cm, classes= B_LABELS, normalize=True, title='Confusion matrix %s, with normalization, %d%% of training' %( self.name, training_size))
-
-        # Courbe ROC
-        # if self.name != 'NN':
-        #     ROC(self.y_test, y_pred)
-        # else:
-        #     ROC(self.y_test, label_binarize(self.y_pred, classes=list(range(8))))
+        training_size = self.test_size*100
+        plot_confusion_matrix(self.cm, classes= B_LABELS, normalize=True, title='Confusion matrix %s, with normalization, %d%% of training data' %( self.name, training_size))
     
 
 def plot_confusion_matrix(cm, classes,
@@ -58,10 +62,11 @@ def plot_confusion_matrix(cm, classes,
 
     print(cm)
 
-    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.imshow(cm, interpolation='nearest', cmap=cmap, aspect='auto')
     plt.title(title)
+    plt.colorbar()
     tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes) #, rotation=45)
+    plt.xticks(tick_marks, classes, rotation=45)
     plt.yticks(tick_marks, classes)
 
     fmt = '.3f' if normalize else 'd'
@@ -74,7 +79,7 @@ def plot_confusion_matrix(cm, classes,
 
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    plt.tight_layout()
+    # plt.tight_layout()
     plt.show()
 
 def plot_confusion_matrix_Save(cm, classes,
